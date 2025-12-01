@@ -1,0 +1,116 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<style>
+  .hero-card {
+    background: #fff7f4;
+    border: 1px solid rgba(0,0,0,0.04);
+    border-radius: 12px;
+  }
+  .cta-btn {
+    min-width: 190px;
+    font-weight: 600;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  }
+  .info-chip {
+    background: #fff7f4;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  }
+</style>
+
+<div class="text-center py-4">
+  <div class="mb-2">
+    <i class="fas fa-leaf fa-2x text-success me-2"></i>
+    <span class="h1 fw-bold" style="color:#13334c;">Welcome to Click to Assignment</span>
+  </div>
+  <p class="lead text-muted">Manage your coins, run AI services, and track your activity effortlessly.</p>
+  <div class="d-flex justify-content-center gap-3 my-3 flex-wrap">
+    <a href="{% url 'customer:dashboard' %}" class="btn btn-success btn-lg cta-btn">
+      <i class="fas fa-chart-pie me-2"></i>Go to Dashboard
+    </a>
+    <a href="{% url 'customer:pricing' %}" class="btn btn-warning btn-lg cta-btn">
+      <i class="fas fa-tags me-2"></i>View Plans
+    </a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card hero-card shadow-sm">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <div class="text-muted">Total Coins</div>
+          <div class="h3 mb-0">{{ coin_balance }}</div>
+        </div>
+        <img src="{% static 'img/Coin.png' %}" alt="Coin" style="width:36px;height:36px;object-fit:cover;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.2);">
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card hero-card shadow-sm">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <div class="text-muted">AI Operations</div>
+          <div class="h3 mb-0">{{ ai_operations }}</div>
+        </div>
+        <i class="fas fa-robot fa-2x text-success"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card hero-card shadow-sm">
+      <div class="card-body d-flex align-items-center justify-content-between">
+        <div>
+          <div class="text-muted">Tickets Open</div>
+          <div class="h3 mb-0">{{ open_tickets }}</div>
+        </div>
+        <i class="fas fa-ticket-alt fa-2x text-primary"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex justify-content-center mt-3">
+  <div class="card shadow-sm info-chip" style="width: 100%; max-width: 640px;">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div class="fw-semibold">Quick Info</div>
+        <div class="text-muted small">Role: Customer</div>
+        <div class="d-inline-block px-3 py-2 bg-light rounded shadow-sm ms-auto" id="liveClock" style="min-width: 220px; font-weight: 600;">
+          <i class="fas fa-clock me-2 text-primary"></i>
+          <span id="liveClockDate"></span>
+          <span class="ms-2" id="liveClockTime"></span>
+        </div>
+      </div>
+      <div class="mt-3">
+        <div class="mb-1"><i class="fas fa-id-card me-2 text-success"></i>Employee ID: <strong>{{ user.employee_id|default:'N/A' }}</strong></div>
+        <div class="mb-1"><i class="fas fa-envelope me-2 text-success"></i>Email: {{ user.email }}</div>
+        <div class="mb-1"><i class="fas fa-calendar me-2 text-success"></i>Member since: {{ user.date_joined|date:"F d, Y" }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+(function() {
+  function updateClock() {
+    const now = new Date();
+    const dateOpts = { year: 'numeric', month: 'short', day: '2-digit' };
+    const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    const dateEl = document.getElementById('liveClockDate');
+    const timeEl = document.getElementById('liveClockTime');
+    if (dateEl && timeEl) {
+      dateEl.textContent = now.toLocaleDateString(undefined, dateOpts);
+      timeEl.textContent = now.toLocaleTimeString(undefined, timeOpts);
+    }
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+})();
+</script>
+{% endblock %}

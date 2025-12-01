@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block title %}Job Detail - {{ job.job_id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0"><i class="fas fa-briefcase"></i> Job Detail – {{ job.job_id }}</h4>
+        </div>
+        <div class="card-body">
+            <!-- Basic Info Section -->
+            <h5 class="border-bottom pb-2 mb-3">
+                <i class="fas fa-info-circle"></i> Basic Information
+            </h5>
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered">
+                    <tr>
+                        <th style="width: 30%;">Job ID</th>
+                        <td>{{ job.job_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>System ID</th>
+                        <td>{{ job.system_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Serial Number</th>
+                        <td>{{ job.sl_no }}</td>
+                    </tr>
+                    <tr>
+                        <th>Amount</th>
+                        <td><strong>₹{{ job.amount|floatformat:2 }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>
+                            <span class="badge bg-{% if job.status == 'PENDING' %}warning{% elif job.status == 'APPROVED' %}success{% elif job.status == 'COMPLETED' %}info{% else %}info{% endif %}">
+                                {{ job.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Created By</th>
+                        <td>{{ job.created_by.get_full_name }} ({{ job.created_by.email }})</td>
+                    </tr>
+                    <tr>
+                        <th>Expected Deadline</th>
+                        <td>{{ job.expected_deadline|date:"F d, Y H:i" }} IST</td>
+                    </tr>
+                    <tr>
+                        <th>Strict Deadline</th>
+                        <td>{{ job.strict_deadline|date:"F d, Y H:i" }} IST</td>
+                    </tr>
+                    <tr>
+                        <th>Created At</th>
+                        <td>{{ job.created_at|date:"F d, Y H:i:s" }}</td>
+                    </tr>
+                    {% if job.approved_at %}
+                    <tr>
+                        <th>Approved At</th>
+                        <td>{{ job.approved_at|date:"F d, Y H:i:s" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Approved By</th>
+                        <td>{{ job.approved_by.get_full_name }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+
+            <!-- Instructions Section -->
+            <h5 class="border-bottom pb-2 mb-3">
+                <i class="fas fa-file-alt"></i> Instructions
+            </h5>
+            <div class="bg-light border rounded p-3 mb-4">
+                <pre style="white-space: pre-wrap; font-family: Arial, sans-serif; margin: 0;">{{ job.instruction }}</pre>
+            </div>
+
+            <!-- Attachments Section -->
+            {% if attachments %}
+            <h5 class="border-bottom pb-2 mb-3">
+                <i class="fas fa-paperclip"></i> Attachments ({{ attachments.count }})
+            </h5>
+            <div class="list-group mb-4">
+                {% for attachment in attachments %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-file{% if attachment.file_type == 'pdf' %}-pdf text-danger{% elif attachment.file_type in 'doc,docx' %}-word text-primary{% elif attachment.file_type in 'png,jpg,jpeg' %}-image text-info{% elif attachment.file_type in 'xlsx,xls,csv' %}-excel text-success{% else %} text-secondary{% endif %}"></i>
+                        <strong>{{ attachment.filename }}</strong>
+                        <br>
+                        <small class="text-muted">
+                            Type: {{ attachment.file_type|upper }} | 
+                            Size: {{ attachment.file_size|filesizeformat }} | 
+                            Uploaded: {{ attachment.uploaded_at|date:"M d, Y H:i" }}
+                        </small>
+                    </div>
+                    <a href="{{ attachment.file.url }}" target="_blank" class="btn btn-sm btn-primary" download>
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No attachments uploaded for this job.
+            </div>
+            {% endif %}
+
+            <!-- AI Generation Status Section -->
+            <h5 class="border-bottom pb-2 mb-3">
+                <i class="fas fa-robot"></i> AI Generation Status
+            </h5>
+            <div class="table-responsive mb-4">
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Component</th>
+                            <th>Status</th>
+                            <th>Generated At</th>
+                            <th>Regenerations</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><i class="fas fa-file-alt"></i> Job Summary</td>
+                            <td>
+                                {% if has_summary %}
+                                    {% if summary_approved %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending Approval</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Generated</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if has_summary %}{{ job.summary.generated_at|date:"M d, Y H:i" }}{% else %}-{% endif %}</td>
+                            <td>{% if has_summary %}{{ job.summary.regeneration_count }}/3{% else %}-{% endif %}</td>
+                            <td>
+                                {% if has_summary %}
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewAiContent({{ job.id }}, 'summary')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                {% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-sitemap"></i> Job Structure</td>
+                            <td>
+                                {% if has_structure %}
+                                    {% if structure_approved %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending Approval</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Generated</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if has_structure %}{{ job.structure.generated_at|date:"M d, Y H:i" }}{% else %}-{% endif %}</td>
+                            <td>{% if has_structure %}{{ job.structure.regeneration_count }}/3{% else %}-{% endif %}</td>
+                            <td>
+                                {% if has_structure %}
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewAiContent({{ job.id }}, 'structure')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                {% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-align-left"></i> Content</td>
+                            <td>
+                                {% if has_content %}
+                                    {% if content_approved %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending Approval</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Generated</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if has_content %}{{ job.content.generated_at|date:"M d, Y H:i" }}{% else %}-{% endif %}</td>
+                            <td>{% if has_content %}{{ job.content.regeneration_count }}/3{% else %}-{% endif %}</td>
+                            <td>
+                                {% if has_content %}
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewAiContent({{ job.id }}, 'content')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                {% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-book"></i> References</td>
+                            <td>
+                                {% if has_references %}
+                                    {% if references_approved %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending Approval</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Generated</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if has_references %}{{ job.references.generated_at|date:"M d, Y H:i" }}{% else %}-{% endif %}</td>
+                            <td>{% if has_references %}{{ job.references.regeneration_count }}/3{% else %}-{% endif %}</td>
+                            <td>
+                                {% if has_references %}
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewAiContent({{ job.id }}, 'references')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                {% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-file-alt"></i> Full Content</td>
+                            <td>
+                                {% if has_full_content %}
+                                    {% if full_content_approved %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending Approval</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Generated</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if has_full_content %}{{ job.full_content.generated_at|date:"M d, Y H:i" }}{% else %}-{% endif %}</td>
+                            <td>{% if has_full_content %}{{ job.full_content.regeneration_count }}/3{% else %}-{% endif %}</td>
+                            <td>
+                                {% if has_full_content %}
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewAiContent({{ job.id }}, 'full_content')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                {% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-copy"></i> Plagiarism Report</td>
+                            <td>
+                                {% if has_plag_report %}
+                                    <span class="badge bg-info">Generated ({{ job.plag_report.similarity_percentage }}%)</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Generated</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if has_plag_report %}{{ job.plag_report.generated_at|date:"M d, Y H:i" }}{% else %}-{% endif %}</td>
+                            <td>-</td>
+                            <td>
+                                {% if has_plag_report %}
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewAiContent({{ job.id }}, 'plag_report')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                {% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-robot"></i> AI Report</td>
+                            <td>
+                                {% if has_ai_report %}
+                                    <span class="badge bg-info">Generated ({{ job.ai_report.ai_percentage }}%)</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Generated</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if has_ai_report %}{{ job.ai_report.generated_at|date:"M d, Y H:i" }}{% else %}-{% endif %}</td>
+                            <td>-</td>
+                            <td>
+                                {% if has_ai_report %}
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewAiContent({{ job.id }}, 'ai_report')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                {% else %}-{% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+                {% if job.status == 'PENDING' %}
+                    <a href="{% url 'superadmin:new_jobs' %}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-cog"></i> Process This Job (AI Generation)
+                    </a>
+                {% endif %}
+                
+                <a href="{% url 'superadmin:all_jobs' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to All Jobs
+                </a>
+            </div>
+            
+            {% if reworks %}
+            <hr class="my-4">
+            <h5 class="border-bottom pb-2 mb-3">
+                <i class="fas fa-undo"></i> Reworks
+            </h5>
+            <div class="table-responsive mb-4">
+                <table class="table table-sm table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Rework ID</th>
+                            <th>Status</th>
+                            <th>Requested By</th>
+                            <th>Created</th>
+                            <th>Expected Deadline</th>
+                            <th>Handled By</th>
+                            <th>Handled At</th>
+                            <th>Notes</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rw in reworks %}
+                        <tr>
+                            <td>{{ rw.rework_id|default:rw.assign_rework_id }}</td>
+                            <td>
+                                {% if rw.status == 'PENDING' %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif rw.status == 'APPROVED' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ rw.requested_by.get_full_name|default:rw.requested_by.email }}</td>
+                            <td>{{ rw.created_at|date:"M d, Y H:i" }}</td>
+                            <td>{{ rw.expected_deadline|date:"M d, Y H:i" }}</td>
+                            <td>{{ rw.handled_by.get_full_name|default:rw.handled_by.email }}</td>
+                            <td>{% if rw.handled_at %}{{ rw.handled_at|date:"M d, Y H:i" }}{% else %}-{% endif %}</td>
+                            <td class="small" style="max-width: 240px; white-space: pre-wrap;">{{ rw.reason|default:'-' }}</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'superadmin:rework_detail' rw.pk %}">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewAiContent(jobId, contentType) {
+    fetch(`/ai/view-content/${jobId}/${contentType}/`)
+        .then(response => response.json())
+        .then(data => {
+            const lines = [];
+            if (data.topic) {
+                lines.push(`<strong>Topic:</strong> ${data.topic}`);
+            }
+            if (data.word_count !== undefined) {
+                lines.push(`<strong>Word Count:</strong> ${data.word_count}`);
+            }
+            if (data.reference_style) {
+                lines.push(`<strong>Reference Style:</strong> ${data.reference_style}`);
+            }
+            if (data.writing_style) {
+                lines.push(`<strong>Writing Style:</strong> ${data.writing_style}`);
+            }
+            if (data.similarity !== undefined) {
+                lines.push(`<strong>Similarity:</strong> ${data.similarity}%`);
+            }
+            if (data.ai_percentage !== undefined) {
+                lines.push(`<strong>AI Percentage:</strong> ${data.ai_percentage}%`);
+            }
+            if (data.reference_list) {
+                lines.push('<strong>Reference List:</strong>');
+                lines.push(`<pre style="white-space: pre-wrap;">${data.reference_list}</pre>`);
+            }
+            if (data.citation_list) {
+                lines.push('<strong>Citation List:</strong>');
+                lines.push(`<pre style="white-space: pre-wrap;">${data.citation_list}</pre>`);
+            }
+            const content = data.content || data.report_data || '';
+            if (content) {
+                lines.push('<strong>Content:</strong>');
+                lines.push(`<pre style="white-space: pre-wrap;">${content}</pre>`);
+            }
+
+            const html = lines.length ? lines.join('<br>') : '<em>No content available.</em>';
+
+            let modal = document.getElementById('aiContentModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.className = 'modal fade';
+                modal.id = 'aiContentModal';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">AI Content Preview</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body" id="aiContentBody"></div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            document.getElementById('aiContentBody').innerHTML = html;
+            new bootstrap.Modal(modal).show();
+        })
+        .catch(() => alert('Error loading content. Please try again.'));
+}
+</script>
+{% endblock %}

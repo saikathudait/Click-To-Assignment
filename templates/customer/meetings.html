@@ -1,0 +1,51 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-3">My Meetings</h2>
+<div class="card shadow-sm" style="background: {{ theme_color }};">
+  <div class="card-body">
+    <form class="row g-3" method="post">
+      {% csrf_token %}
+      <div class="col-md-6">
+        <label class="form-label">Meeting Title</label>
+        <input type="text" class="form-control" name="title">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Meeting Date</label>
+        <input type="date" class="form-control" name="meeting_date">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Start Time</label>
+        <input type="time" class="form-control" name="start_time">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">End Time</label>
+        <input type="time" class="form-control" name="end_time">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Location</label>
+        <input type="text" class="form-control" name="location">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Maximum Attendees</label>
+        <input type="number" class="form-control" name="max_attendees">
+      </div>
+      <div class="col-12">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" rows="3" name="description"></textarea>
+      </div>
+      <div class="col-12">
+        <button class="btn btn-primary" type="submit">Save Meeting</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="card shadow-sm mt-3" style="background: {{ theme_color }};">
+  <div class="card-body table-responsive">
+    <h5 class="mb-3">Past Meetings</h5>
+    <table class="table table-hover mb-0">
+      <thead class="table-light"><tr><th>Title</th><th>Date</th><th>Time</th><th>Location</th></tr></thead>
+      <tbody><tr><td colspan="4" class="text-center text-muted">No meetings yet.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

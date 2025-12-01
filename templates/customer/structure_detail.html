@@ -1,0 +1,90 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-3">Structure Submission</h2>
+<div class="card shadow-sm mb-3">
+  <div class="card-body d-flex justify-content-between align-items-start">
+    <div>
+      <div class="fw-semibold">Submission ID: {{ submission.submission_id }}</div>
+      <div class="text-muted small">Status: {{ submission.status }}</div>
+      <div class="text-muted small">Coins: {{ submission.coins_spent }} | Created: {{ submission.created_at|date:"Y-m-d H:i" }}</div>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'customer:structure_generate' %}">Back</a>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-2">Topic</h5>
+    <div class="text-muted">{{ submission.topic|default:"-" }}</div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-2">Inputs</h5>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="fw-semibold">Word Count</div>
+        <div>{{ submission.word_count|default:"-" }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Referencing Style</div>
+        <div>{{ submission.referencing_style|default:"-" }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Academic Style</div>
+        <div>{{ submission.academic_style|default:"-" }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Academic Level</div>
+        <div>{{ submission.academic_level|default:"-" }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Subject Field</div>
+        <div>{{ submission.subject_field|default:"-" }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-2">Summary / Instructions</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.summary|default:"N/A" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-2">Marking Criteria</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.marking_criteria|default:"N/A" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-2">Merit Criteria</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.merit_criteria|default:"N/A" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="mb-2">AI Structure (if any)</h5>
+    <pre id="ai-structure-text" class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.ai_structure|default:"Not generated." }}</pre>
+    <button class="btn btn-sm btn-outline-primary mt-2" type="button" onclick="copyAIStructure()">Copy</button>
+  </div>
+</div>
+<script>
+function copyAIStructure() {
+  const el = document.getElementById('ai-structure-text');
+  if (!el) return;
+  const text = el.innerText || el.textContent || '';
+  navigator.clipboard.writeText(text).then(function() {
+    alert('AI structure copied to clipboard.');
+  }).catch(function() {
+    alert('Could not copy. Please try manually.');
+  });
+}
+</script>
+{% endblock %}

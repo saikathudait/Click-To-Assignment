@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Customer Dashboard Analytics</h2>
+<p class="text-muted">Super Admin-only analytics across all customers. Use date filters to refine.</p>
+
+<div class="row g-3 mb-3">
+  {% for card in rule_cards %}
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">{{ card.label }}</div>
+        <div class="h4 mb-0">
+          {{ card.coins }} coins
+          {% if 'create content' in card.label|lower %}/ {{ content_word_block }} words{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Date from</label>
+        <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date to</label>
+        <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-success" type="submit">Apply</button>
+        <a class="btn btn-outline-secondary" href="{% url 'superadmin:customer_analytics' %}">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">Total Wallet Balance</div>
+        <div class="h4 mb-0">{{ total_wallet_balance }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">Total Coins Spent</div>
+        <div class="h4 mb-0">{{ total_coins_spent }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">Total Operations</div>
+        <div class="h4 mb-0">{{ total_operations }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">Customers</div>
+        <div class="h4 mb-0">{{ total_customers }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="text-muted">Service Usage</h6>
+        {% if service_usage %}
+          {% for item in service_usage %}
+          <div class="mb-2">
+            <div class="d-flex justify-content-between">
+              <span>{{ item.label }}</span><span class="text-muted small">{{ item.count }} ({{ item.pct }}%)</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div class="progress-bar bg-success" role="progressbar" style="width: {{ item.pct }}%;"></div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-muted">No usage data.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="text-muted">Top Customers by Operations</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Customer</th><th>Operations</th><th>Coins Spent</th><th>Wallet</th></tr>
+            </thead>
+            <tbody>
+              {% if top_customers %}
+                {% for row in top_customers %}
+                <tr>
+                  <td>{{ row.customer_name }} <span class="text-muted small">({{ row.customer_id }})</span></td>
+                  <td>{{ row.operations }}</td>
+                  <td>{{ row.coins_spent }}</td>
+                  <td>{{ row.wallet_balance }}</td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr><td colspan="4" class="text-center text-muted">No data.</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body table-responsive">
+    <h5 class="mb-3">Customer KPIs</h5>
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Customer</th>
+          <th>Email</th>
+          <th>Wallet</th>
+          <th>Coins Spent</th>
+          <th>Operations</th>
+          <th>Tickets</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if customer_rows %}
+          {% for row in customer_rows %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ row.customer_name }}</div>
+              <div class="text-muted small">{{ row.customer_id }}</div>
+            </td>
+            <td>{{ row.email }}</td>
+            <td>{{ row.wallet_balance }}</td>
+            <td>{{ row.coins_spent }}</td>
+            <td>{{ row.operations }}</td>
+            <td>{{ row.tickets }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted">No customer data.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

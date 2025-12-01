@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>AI Service Configuration</h2>
+<p class="text-muted">Set how many coins are deducted per task (Create Content is per {{ content_word_block }} words). Only Super Admin can update these rules.</p>
+
+<div class="row g-3 mb-3">
+  {% for row in rules %}
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">{{ row.label }}</div>
+        <div class="h4 mb-0">{{ row.coin_cost }} coins</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% if rules|length == 0 %}
+  <div class="col-12">
+    <div class="alert alert-info mb-0">No rules yet.</div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Coin Deduction Rules</h5>
+    <form method="post" class="vstack gap-3">
+      {% csrf_token %}
+      <div class="row g-3">
+        {% for row in rules %}
+        <div class="col-md-6 col-lg-3">
+          <label class="form-label">{{ row.label }} (coins)</label>
+          <input type="number" class="form-control" name="coins_{{ row.key|lower }}" value="{{ row.coin_cost }}" min="0">
+          {% if row.key == 'CREATE_CONTENT' %}
+          <div class="form-text">Charged per {{ content_word_block }} words. Min balance required matches coin cost.</div>
+          {% else %}
+          <div class="form-text">Min balance required matches coin cost.</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <div>
+        <label class="form-label">Notes / Instructions</label>
+        <textarea class="form-control" name="coin_rule_note" rows="4" placeholder="Add internal notes for coin rules">{{ coin_rule_note }}</textarea>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success" type="submit">Save Settings</button>
+        <a class="btn btn-outline-secondary" href="{% url 'superadmin:customer_ai_config' %}">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

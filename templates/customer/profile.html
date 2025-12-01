@@ -1,0 +1,68 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-center py-4">
+  <div class="card shadow" style="width: 100%; max-width: 760px;">
+    <div class="card-header d-flex align-items-center" style="background: #ffb6a8; color: #4a1f10; font-weight: 700;">
+      <i class="fas fa-user me-2"></i> Customer Profile
+    </div>
+    <div class="card-body">
+      <div class="d-flex align-items-center mb-4 gap-4">
+        <div class="text-center">
+        {% if profile_image_url %}
+          <img src="{{ profile_image_url }}?v={% now 'U' %}" alt="Profile Image" class="rounded-circle shadow-sm" style="width: 140px; height: 140px; object-fit: cover; border: 3px solid #e9ecef;">
+        {% elif customer_profile.profile_image %}
+          <img src="{{ customer_profile.profile_image.url }}?v={% now 'U' %}" alt="Profile Image" class="rounded-circle shadow-sm" style="width: 140px; height: 140px; object-fit: cover; border: 3px solid #e9ecef;">
+        {% else %}
+          <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 140px; height: 140px; font-size: 36px; border: 3px solid #e9ecef;">
+            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+          </div>
+        {% endif %}
+        </div>
+        <div class="flex-grow-1">
+          <div class="fw-bold" style="font-size: 45px; line-height: 1.1;">{{ user.get_full_name }}</div>
+          <div class="text-muted">{{ user.email }}</div>
+        </div>
+      </div>
+      <div class="row gy-3">
+        <div class="col-md-6">
+          <div class="fw-semibold">Employee ID:</div>
+          <div>{{ user.employee_id|default:'N/A' }}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="fw-semibold">Role:</div>
+          <span class="badge bg-success">Customer</span>
+        </div>
+        <div class="col-md-6">
+          <div class="fw-semibold">First Name:</div>
+          <div>{{ user.first_name }}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="fw-semibold">Last Name:</div>
+          <div>{{ user.last_name }}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="fw-semibold">Email:</div>
+          <div>{{ user.email }}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="fw-semibold">WhatsApp:</div>
+          <div>{{ user.whatsapp_country_code }} {{ user.whatsapp_no }}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="fw-semibold">Last Qualification:</div>
+          <div>{{ user.last_qualification|default:'N/A' }}</div>
+        </div>
+        <div class="col-md-6">
+          <div class="fw-semibold">Member Since:</div>
+          <div>{{ user.date_joined|date:"F d, Y" }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer p-0">
+      <a class="btn w-100" style="background:#ffc107; color:#000; font-weight:600;" href="{% url 'customer:profile_edit' %}"><i class="fas fa-edit me-2"></i>Edit Profile</a>
+      <a class="btn w-100" style="background:#6c757d; color:#fff; font-weight:600;" href="{% url 'customer:password_change' %}"><i class="fas fa-key me-2"></i>Change Password</a>
+      <a class="btn w-100" style="background:#212529; color:#fff; font-weight:600;" href="{% url 'customer:dashboard' %}"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,202 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<h2>Customer Account Management</h2>
+<p class="text-muted">View all customers, active/inactive, profile review, block/unblock.</p>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <a href="{% url 'superadmin:customer_accounts' %}" class="text-decoration-none">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Total Customers</div>
+          <div class="h4 mb-0">{{ total_customers }}</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{% url 'superadmin:customer_accounts' %}?status=active" class="text-decoration-none">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Active Customers</div>
+          <div class="h4 mb-0">{{ total_active }}</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{% url 'superadmin:customer_accounts' %}?status=inactive" class="text-decoration-none">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Inactive Customers</div>
+          <div class="h4 mb-0">{{ total_inactive }}</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{% url 'superadmin:customer_accounts' %}?status=blocked" class="text-decoration-none">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Blocked Customers</div>
+          <div class="h4 mb-0">{{ total_blocked }}</div>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <form class="row g-3" method="get">
+      <div class="col-md-3">
+        <label class="form-label">Search (Name/Email/ID)</label>
+        <input type="text" class="form-control" name="search" value="{{ search }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status">
+          <option value="">All</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+          <option value="blocked" {% if status_filter == 'blocked' %}selected{% endif %}>Blocked</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Joined From</label>
+        <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Joined To</label>
+        <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-success" type="submit">Apply</button>
+        <a class="btn btn-outline-secondary" href="{% url 'superadmin:customer_accounts' %}">Reset</a>
+      </div>
+    </form>
+  </div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>SL No</th>
+          <th>Customer Name</th>
+          <th>id</th>
+          <th>customer_id</th>
+          <th>user_id</th>
+          <th>role</th>
+          <th>status</th>
+          <th>is_active</th>
+          <th>is_blocked</th>
+          <th>blocked_reason</th>
+          <th>blocked_at</th>
+          <th>is_deleted</th>
+          <th>deleted_at</th>
+          <th>full_name</th>
+          <th>email</th>
+          <th>phone</th>
+          <th>profile_image</th>
+          <th>joined_date</th>
+          <th>last_login_at</th>
+          <th>last_activity_at</th>
+          <th>coin_balance</th>
+          <th>total_coins_added</th>
+          <th>total_coins_spent</th>
+          <th>total_operations</th>
+          <th>total_tickets</th>
+          <th>total_meetings</th>
+          <th>total_bookings</th>
+          <th>notes_internal</th>
+          <th>theme_preference</th>
+          <th>preferred_language</th>
+          <th>timezone</th>
+          <th>updated_at</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if customers %}
+          {% for row in customers %}
+            {% with c=row.user p=row.profile w=row.wallet %}
+              <tr>
+                <td>{{ forloop.counter|add:page_obj.start_index|add:-1 }}</td>
+                <td>{% if p and p.full_name %}{{ p.full_name }}{% else %}{{ c.get_full_name }}{% endif %}</td>
+                <td>{{ p.id|default_if_none:"" }}</td>
+                <td>
+                  {% if c.employee_id %}
+                    {{ c.employee_id }}
+                  {% elif c.customer_code %}
+                    {{ c.customer_code }}
+                  {% elif p and p.customer_id %}
+                    {{ p.customer_id }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+                <td>{{ c.id }}</td>
+                <td>{{ c.role }}</td>
+                <td>{% if p and p.status %}{{ p.status }}{% else %}{{ c.is_active|yesno:"ACTIVE,INACTIVE" }}{% endif %}</td>
+                <td>{{ c.is_active }}</td>
+                <td>{% if p %}{{ p.is_blocked }}{% else %}False{% endif %}</td>
+                <td>{% if p %}{{ p.blocked_reason|default_if_none:"" }}{% endif %}</td>
+                <td>{% if p %}{{ p.blocked_at|date:"Y-m-d H:i" }}{% endif %}</td>
+                <td>{{ c.is_deleted }}</td>
+                <td>{% if p %}{{ p.deleted_at|date:"Y-m-d H:i" }}{% endif %}</td>
+                <td>{% if p and p.full_name %}{{ p.full_name }}{% else %}{{ c.get_full_name }}{% endif %}</td>
+                <td>{{ c.email }}</td>
+                <td>{% if p and p.phone %}{{ p.phone }}{% else %}{{ c.whatsapp_country_code }} {{ c.whatsapp_no }}{% endif %}</td>
+                <td>{% if p %}{{ p.profile_image }}{% endif %}</td>
+                <td>{% if p %}{{ p.joined_date|date:"Y-m-d H:i" }}{% else %}{{ c.date_joined|date:"Y-m-d H:i" }}{% endif %}</td>
+                <td>{{ c.last_login|date:"Y-m-d H:i" }}</td>
+                <td>{% if p and p.last_activity_at %}{{ p.last_activity_at|date:"Y-m-d H:i" }}{% else %}{{ c.last_login|date:"Y-m-d H:i" }}{% endif %}</td>
+                <td>{% if w %}{{ w.balance }}{% elif p %}{{ p.coin_balance|default:0 }}{% else %}0{% endif %}</td>
+                <td>{{ row.agg_total_added|default:0 }}</td>
+                <td>{{ row.agg_total_spent|default:0 }}</td>
+                <td>{{ row.agg_ops|default:row.agg_total_ops|default:0 }}</td>
+                <td>{{ row.agg_tickets|default_if_none:0 }}</td>
+                <td>{% if p %}{{ p.total_meetings|default:0 }}{% else %}0{% endif %}</td>
+                <td>{% if p %}{{ p.total_bookings|default:0 }}{% else %}0{% endif %}</td>
+                <td>{% if p %}{{ p.notes_internal|default_if_none:"" }}{% endif %}</td>
+                <td>{% if p %}{{ p.theme_preference }}{% else %}light{% endif %}</td>
+                <td>{% if p %}{{ p.preferred_language|default_if_none:"" }}{% endif %}</td>
+                <td>{% if p %}{{ p.timezone|default_if_none:"" }}{% endif %}</td>
+                <td>{% if p %}{{ p.updated_at|date:"Y-m-d H:i" }}{% endif %}</td>
+                <td>
+                  <div class="btn-group btn-group-sm" role="group">
+                    <a class="btn btn-outline-success" href="{% url 'superadmin:customer_accounts' %}?action=activate&user_id={{ c.id }}">Activate</a>
+                    <a class="btn btn-outline-danger" href="{% url 'superadmin:customer_accounts' %}?action=deactivate&user_id={{ c.id }}">Deactivate</a>
+                    <a class="btn btn-outline-dark" href="{% url 'superadmin:customer_accounts' %}?action={% if p and p.status == 'BLOCKED' %}unblock{% else %}block{% endif %}&user_id={{ c.id }}">{% if p and p.status == 'BLOCKED' %}Unblock{% else %}Block{% endif %}</a>
+                  </div>
+                </td>
+              </tr>
+            {% endwith %}
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="32" class="text-center text-muted">No customers yet.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+    <div class="text-muted small">
+      Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} (Total {{ total_customers }}) | 20 per page
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <a class="btn btn-outline-secondary btn-sm {% if not page_obj.has_previous %}disabled{% endif %}" href="{% if page_obj.has_previous %}{{ pagination_base }}page={{ page_obj.previous_page_number }}{% else %}#{% endif %}">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+      <span class="small">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      <a class="btn btn-outline-secondary btn-sm {% if not page_obj.has_next %}disabled{% endif %}" href="{% if page_obj.has_next %}{{ pagination_base }}page={{ page_obj.next_page_number }}{% else %}#{% endif %}">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

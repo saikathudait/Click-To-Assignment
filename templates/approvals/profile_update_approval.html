@@ -1,0 +1,117 @@
+<!-- templates/approvals/profile_update_approval.html -->
+{% extends 'base.html' %}
+
+{% block title %}Profile Update Requests - SuperAdmin{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-edit"></i> Profile Update Requests</h1>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card card-stat shadow" data-filter="all">
+            <div class="card-body text-center">
+                <h3 class="text-info">{{ total_requests }}</h3>
+                <p class="mb-0">Total Requests</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card card-stat shadow" data-filter="pending">
+            <div class="card-body text-center">
+                <h3 class="text-warning">{{ pending_requests }}</h3>
+                <p class="mb-0">Pending Requests</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card card-stat shadow" data-filter="approved">
+            <div class="card-body text-center">
+                <h3 class="text-success">{{ total_approved }}</h3>
+                <p class="mb-0">Total Approved</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card card-stat shadow" data-filter="rejected">
+            <div class="card-body text-center">
+                <h3 class="text-danger">{{ total_rejected }}</h3>
+                <p class="mb-0">Total Rejected</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Requests Table -->
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>SL No</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Request For</th>
+                        <th>Current Value</th>
+                        <th>Updated Value</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in requests %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ request.user.first_name }}</td>
+                        <td>{{ request.user.last_name }}</td>
+                        <td>{{ request.get_request_type_display }}</td>
+                        <td>
+                            {% if request.request_type == 'PROFILE_PICTURE' %}
+                                <img src="{{ request.user.profile.profile_picture.url }}" 
+                                     alt="Current" style="max-width: 50px;">
+                            {% else %}
+                                {{ request.current_value }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if request.request_type == 'PROFILE_PICTURE' %}
+                                <img src="{{ request.new_profile_picture.url }}" 
+                                     alt="New" style="max-width: 50px;">
+                            {% else %}
+                                {{ request.updated_value }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if request.status == 'APPROVED' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif request.status == 'REJECTED' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% else %}
+                                <a href="{% url 'approvals:approve_profile_update' request.id %}" 
+                                   class="btn btn-sm btn-success"
+                                   onclick="return confirm('Approve this request?')">
+                                    <i class="fas fa-check"></i> Approve
+                                </a>
+                                <a href="{% url 'approvals:reject_profile_update' request.id %}" 
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Reject this request?')">
+                                    <i class="fas fa-times"></i> Reject
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">No requests found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% include 'includes/pagination.html' with page_obj=page_obj pagination_base=pagination_base page_param='page' %}
+{% endblock %}

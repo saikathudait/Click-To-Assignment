@@ -1,0 +1,100 @@
+<!-- templates/marketing/create_job.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ form_title|default:"Create Job" }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus-circle"></i>
+                    {{ form_title|default:"Job Drop Form" }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Job ID (From Customer) *</label>
+                        {{ form.job_id }}
+                        <small class="text-muted">Must be unique</small>
+                        {% if form.job_id.errors %}
+                            <div class="text-danger">{{ form.job_id.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Instruction (Max 10000 Characters) *</label>
+                        {{ form.instruction }}
+                        {% if form.instruction.errors %}
+                            <div class="text-danger">{{ form.instruction.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if show_attachments %}
+                    <div class="mb-3">
+                        <label class="form-label">Attachments (Multiple Files)</label>
+                        {{ form.attachments }}
+                        <small class="text-muted d-block">
+                            Allowed: DOC, DOCX, PDF, PNG, JPG, JPEG, PPTX, CSV, XLSX, XLS (Max 50MB each)
+                        </small>
+                        {% if form.attachments.errors %}
+                            <div class="text-danger">{{ form.attachments.errors }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Amount (INR) *</label>
+                            {{ form.amount }}
+                            {% if form.amount.errors %}
+                                <div class="text-danger">{{ form.amount.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Expected Deadline (Date & Time IST) *</label>
+                            {{ form.expected_deadline }}
+                            {% if form.expected_deadline.errors %}
+                                <div class="text-danger">{{ form.expected_deadline.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Strict Deadline (Date & Time IST) *</label>
+                            {{ form.strict_deadline }}
+                            <small class="text-muted d-block">Min 24 hours after Expected Deadline</small>
+                            {% if form.strict_deadline.errors %}
+                                <div class="text-danger">{{ form.strict_deadline.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        {% url 'marketing:all_projects' as default_cancel %}
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-paper-plane"></i> {{ submit_label|default:"Submit Job" }}
+                        </button>
+                        <a href="{{ cancel_url|default:default_cancel }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

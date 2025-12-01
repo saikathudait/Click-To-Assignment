@@ -1,0 +1,82 @@
+<!-- templates/marketing/welcome.html and superadmin/welcome.html -->
+{% extends 'base.html' %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<div class="text-center mt-5">
+    <h1 class="display-3 mb-4">
+        <i class="fas fa-tasks"></i> Welcome to Click to Assignment
+    </h1>
+    
+    {% if user.role == 'SUPERADMIN' %}
+        <p class="lead">Manage jobs, approve users, and oversee AI content generation</p>
+        <div class="mt-5">
+            <a href="{% url 'superadmin:dashboard' %}" class="btn btn-success btn-lg me-3">
+                <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+            </a>
+            <a href="{% url 'superadmin:new_jobs' %}" class="btn btn-warning btn-lg">
+                <i class="fas fa-bell"></i> View New Jobs
+            </a>
+        </div>
+    {% else %}
+        <p class="lead">Create and manage your assignment projects</p>
+        <div class="mt-5">
+            <a href="{% url 'marketing:dashboard' %}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-chart-line"></i> Go to Dashboard
+            </a>
+            <a href="{% url 'marketing:create_job' %}" class="btn btn-success btn-lg">
+                <i class="fas fa-plus-circle"></i> Create New Job
+            </a>
+        </div>
+    {% endif %}
+    
+    <div class="mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">Quick Info</h4>
+                            <div class="d-inline-block px-3 py-2 bg-light rounded shadow-sm" id="liveClock" style="min-width: 220px; font-weight: 600;">
+                                <i class="fas a-clock me-2 text-primary"></i>
+                                <span id="liveClockDate"></span>
+                                <span class="ms-2" id="liveClockTime"></span>
+                            </div>
+                        </div>
+                        <ul class="list-unstyled text-start">
+                            <li><i class="fas fa-check text-success"></i> Employee ID: <strong>{{ user.employee_id }}</strong></li>
+                            <li><i class="fas fa-check text-success"></i> Email: {{ user.email }}</li>
+                            <li><i class="fas fa-check text-success"></i> Role: {{ user.get_role_display }}</li>
+                            <li><i class="fas fa-check text-success"></i> Member since: {{ user.date_joined|date:"F d, Y" }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'includes/announcement_cards.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    {% include 'includes/announcement_script.html' %}
+    <script>
+    (function() {
+        function updateClock() {
+            const now = new Date();
+            const dateOpts = { year: 'numeric', month: 'short', day: 'numeric' };
+            const timeOpts = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            const dateEl = document.getElementById('liveClockDate');
+            const timeEl = document.getElementById('liveClockTime');
+            if (dateEl && timeEl) {
+                dateEl.textContent = now.toLocaleDateString(undefined, dateOpts);
+                timeEl.textContent = now.toLocaleTimeString(undefined, timeOpts);
+            }
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    })();
+    </script>
+{% endblock %}

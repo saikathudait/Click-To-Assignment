@@ -1,0 +1,465 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.75rem;
+        overflow: visible;
+    }
+    .stats-card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.35rem 0.8rem rgba(0,0,0,0.15);
+    }
+    .stats-card.active {
+        border: 2px solid #0d6efd;
+        box-shadow: 0 0.4rem 0.9rem rgba(13,110,253,0.25);
+    }
+    .stats-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+    }
+    .action-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+    .action-stack button,
+    .action-stack a {
+        width: 36px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    @media (max-width: 992px) {
+        .action-stack button,
+        .action-stack a {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="mb-0"><i class="fas fa-users-cog me-2"></i>User Management</h2>
+            <p class="text-muted mb-0"></p>
+        </div>
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+            <div>
+                <label class="form-label mb-1">Search</label>
+                <input type="text" class="form-control" name="search" placeholder="Name, email, ID" value="{{ filters.search }}">
+            </div>
+            <div>
+                <label class="form-label mb-1">Role</label>
+                <select class="form-select" name="role">
+                    <option value="">All</option>
+                    {% for value,label in role_choices %}
+                        <option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label mb-1">Status</label>
+                <select class="form-select" name="status">
+                    <option value="">All</option>
+                    <option value="ACTIVE" {% if filters.status == 'ACTIVE' %}selected{% endif %}>Active</option>
+                    <option value="INACTIVE" {% if filters.status == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            <div class="form-check mt-4 pt-1">
+                <input class="form-check-input" type="checkbox" value="1" name="show_deleted" id="showDeleted" {% if filters.show_deleted %}checked{% endif %}>
+                <label class="form-check-label" for="showDeleted">
+                    Show archived
+                </label>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <a href="{% url 'superadmin:user_management' %}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="stats-row d-flex flex-wrap gap-3 mb-4">
+        <a href="{{ card_urls.total }}" class="card stats-card shadow-sm {% if card_active.total %}active{% endif %}">
+            <div class="card-body">
+                <p class="text-muted mb-1">Total Users</p>
+                <div class="stats-value text-primary">{{ stats.total }}</div>
+            </div>
+        </a>
+        <a href="{{ card_urls.active }}" class="card stats-card shadow-sm {% if card_active.active %}active{% endif %}">
+            <div class="card-body">
+                <p class="text-muted mb-1">Active Users</p>
+                <div class="stats-value text-success">{{ stats.active }}</div>
+            </div>
+        </a>
+        <a href="{{ card_urls.inactive }}" class="card stats-card shadow-sm {% if card_active.inactive %}active{% endif %}">
+            <div class="card-body">
+                <p class="text-muted mb-1">Inactive Users</p>
+                <div class="stats-value text-warning">{{ stats.inactive }}</div>
+            </div>
+        </a>
+        <a href="{{ card_urls.marketing }}" class="card stats-card shadow-sm {% if card_active.marketing %}active{% endif %}">
+            <div class="card-body">
+                <p class="text-muted mb-1">Marketing Team</p>
+                <div class="stats-value text-info">{{ stats.marketing }}</div>
+            </div>
+        </a>
+        <a href="{{ card_urls.superadmin }}" class="card stats-card shadow-sm {% if card_active.superadmin %}active{% endif %}">
+            <div class="card-body">
+                <p class="text-muted mb-1">Super Admins</p>
+                <div class="stats-value text-danger">{{ stats.superadmin }}</div>
+            </div>
+        </a>
+        <a href="{{ card_urls.customer }}" class="card stats-card shadow-sm {% if card_active.customer %}active{% endif %}">
+            <div class="card-body">
+                <p class="text-muted mb-1">Customers</p>
+                <div class="stats-value text-warning">{{ stats.customer }}</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <strong><i class="fas fa-table me-2"></i>All Users</strong>
+            <span>Total: {{ page_obj.paginator.count }}</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                        <table class="table table-striped align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                            <th>Last Login</th>
+                            <th>Created</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in page_obj.object_list %}
+                        <tr class="{% if user.is_deleted %}table-danger{% elif not user.is_active %}table-warning{% endif %}">
+                            <td><strong>{{ user.employee_id|default:user.id }}</strong></td>
+                            <td>{{ user.first_name }} {{ user.last_name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge {% if user.role == 'SUPERADMIN' %}bg-success{% else %}bg-info text-dark{% endif %}">
+                                    {{ user.get_role_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if user.is_deleted %}
+                                    <span class="badge bg-danger">Deleted</span>
+                                {% elif user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.last_login %}
+                                    {{ user.last_login|date:"M d, Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                            <td class="text-end">
+                                <div class="action-stack">
+                                    <a href="{% url 'superadmin:user_management' %}?{% if filter_query %}{{ filter_query }}&{% endif %}edit={{ user.id }}" class="btn btn-sm btn-outline-primary" title="Edit user">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% if not user.is_deleted %}
+                                    <form method="post" action="{% url 'superadmin:user_toggle_status' user.id %}">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm {% if user.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{% if user.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                            {% if user.is_active %}
+                                                <i class="fas fa-user-slash"></i>
+                                            {% else %}
+                                                <i class="fas fa-user-check"></i>
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'superadmin:user_toggle_role' user.id %}">
+                                        {% csrf_token %}
+                                        <div class="d-flex align-items-center gap-1">
+                                            <select name="target_role" class="form-select form-select-sm" style="min-width: 140px;">
+                                                {% for value,label in role_choices %}
+                                                    <option value="{{ value }}" {% if user.role == value %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button class="btn btn-sm btn-outline-secondary" title="Change role">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <form method="post" action="{% url 'superadmin:user_soft_delete' user.id %}" onsubmit="return confirm('Archive this user?');">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-outline-danger" title="Archive user">
+                                            <i class="fas fa-archive"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4 text-muted">
+                                No users match your filters.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3 border-top bg-light">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="fas fa-user-plus me-2"></i>Add User
+            </button>
+            <div class="d-flex flex-wrap align-items-center gap-3 ms-auto">
+                <div class="text-muted">
+                    Total Count: {{ page_obj.paginator.count }} | {{ per_page }} Records Per Page
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if page_obj.number > 1 %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page=1"><i class="fas fa-angle-double-left"></i></a>
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.previous_page_number }}"><i class="fas fa-angle-left"></i></a>
+                    {% else %}
+                        <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-double-left"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-left"></i></button>
+                    {% endif %}
+                    <span class="fw-semibold">{{ page_obj.start_index }}-{{ page_obj.end_index }}</span>
+                    {% if page_obj.has_next %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.next_page_number }}"><i class="fas fa-angle-right"></i></a>
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.paginator.num_pages }}"><i class="fas fa-angle-double-right"></i></a>
+                    {% else %}
+                        <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-right"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-double-right"></i></button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if create_form.non_field_errors %}
+                    <div class="alert alert-danger">{{ create_form.non_field_errors }}</div>
+                {% endif %}
+                <form method="post" id="addUserForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="create">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            {{ create_form.first_name }}
+                            {{ create_form.first_name.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            {{ create_form.last_name }}
+                            {{ create_form.last_name.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            {{ create_form.email }}
+                            {{ create_form.email.errors }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Country Code</label>
+                            {{ create_form.whatsapp_country_code }}
+                            {{ create_form.whatsapp_country_code.errors }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">WhatsApp No</label>
+                            {{ create_form.whatsapp_no }}
+                            {{ create_form.whatsapp_no.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Qualification</label>
+                            {{ create_form.last_qualification }}
+                            {{ create_form.last_qualification.errors }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Role</label>
+                            {{ create_form.role }}
+                            {{ create_form.role.errors }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Joining Date</label>
+                            {{ create_form.joining_date }}
+                            {{ create_form.joining_date.errors }}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ create_form.is_active }}
+                                <label class="form-check-label ms-2">Active</label>
+                            </div>
+                            {{ create_form.is_active.errors }}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ create_form.auto_generate_password }}
+                                <label class="form-check-label ms-2">Auto-generate password</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password</label>
+                            {{ create_form.password }}
+                            <small class="text-muted d-block">Leave blank to auto-generate.</small>
+                            {{ create_form.password.errors }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="addUserForm" class="btn btn-success">Create User</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if edit_form and editing_user %}
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if edit_form.non_field_errors %}
+                    <div class="alert alert-danger">{{ edit_form.non_field_errors }}</div>
+                {% endif %}
+                <form method="post" id="editUserForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="update">
+                    <input type="hidden" name="user_id" value="{{ editing_user.id }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            {{ edit_form.first_name }}
+                            {{ edit_form.first_name.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            {{ edit_form.last_name }}
+                            {{ edit_form.last_name.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            {{ edit_form.email }}
+                            {{ edit_form.email.errors }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Country Code</label>
+                            {{ edit_form.whatsapp_country_code }}
+                            {{ edit_form.whatsapp_country_code.errors }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">WhatsApp No</label>
+                            {{ edit_form.whatsapp_no }}
+                            {{ edit_form.whatsapp_no.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Qualification</label>
+                            {{ edit_form.last_qualification }}
+                            {{ edit_form.last_qualification.errors }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Role</label>
+                            {{ edit_form.role }}
+                            {{ edit_form.role.errors }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Joining Date</label>
+                            {{ edit_form.joining_date }}
+                            {{ edit_form.joining_date.errors }}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ edit_form.is_active }}
+                                <label class="form-check-label ms-2">Active</label>
+                            </div>
+                            {{ edit_form.is_active.errors }}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ edit_form.reset_password }}
+                                <label class="form-check-label ms-2">Reset password</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">New Password</label>
+                            {{ edit_form.new_password }}
+                            <small class="text-muted d-block">Leave blank to auto-generate when resetting.</small>
+                            {{ edit_form.new_password.errors }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a href="{% url 'superadmin:user_management' %}{% if filter_query %}?{{ filter_query }}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" form="editUserForm" class="btn btn-warning text-dark">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const autoPasswordField = document.querySelector('#addUserForm #id_auto_generate_password');
+    const passwordInput = document.querySelector('#addUserForm #id_password');
+    if (autoPasswordField && passwordInput) {
+        const togglePasswordInput = () => {
+            passwordInput.disabled = autoPasswordField.checked;
+        };
+        autoPasswordField.addEventListener('change', togglePasswordInput);
+        togglePasswordInput();
+    }
+
+    {% if show_create_modal %}
+    var addModal = new bootstrap.Modal(document.getElementById('addUserModal'));
+    addModal.show();
+    {% endif %}
+
+    {% if show_edit_modal %}
+    var editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+    editModal.show();
+    {% endif %}
+});
+</script>
+{% endblock %}

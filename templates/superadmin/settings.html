@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="mb-1"><i class="fas fa-sliders-h me-2"></i>Global Settings</h2>
+    <p class="text-muted">Update the site-wide rules that every workflow follows. Changes take effect immediately.</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm card-stat">
+            <div class="card-body">
+                <div class="text-muted small">Default Turnaround</div>
+                <div class="h4 mb-0">{{ settings_obj.default_turnaround_days }} days</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm card-stat">
+            <div class="card-body">
+                <div class="text-muted small">Max Upload Size</div>
+                <div class="h4 mb-0">{{ settings_obj.max_upload_size_mb }} MB</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm card-stat">
+            <div class="card-body">
+                <div class="text-muted small">Rework Limit</div>
+                <div class="h4 mb-0">{{ settings_obj.rework_limit }} cycles</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Edit Settings</h5>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger m-3">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <div class="card-body row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Default Turnaround (days)</label>
+                {{ form.default_turnaround_days }}
+                {{ form.default_turnaround_days.errors }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Max Upload Size (MB)</label>
+                {{ form.max_upload_size_mb }}
+                {{ form.max_upload_size_mb.errors }}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Allowed File Types</label>
+                <small class="text-muted d-block mb-1">Comma separated extensions like pdf,docx,txt</small>
+                {{ form.allowed_file_types }}
+                {{ form.allowed_file_types.errors }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Rework Limit</label>
+                {{ form.rework_limit }}
+                {{ form.rework_limit.errors }}
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Auto Close (days)</label>
+                {{ form.auto_close_days }}
+                {{ form.auto_close_days.errors }}
+            </div>
+        </div>
+        <div class="card-footer bg-white text-end">
+            <button type="submit" class="btn btn-success px-4">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

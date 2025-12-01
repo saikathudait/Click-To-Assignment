@@ -1,0 +1,124 @@
+﻿{# templates/includes/navbar_customer.html #}
+{% load static %}
+<style>
+    .sidebar-customer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 260px;
+        background: #FEEBE7;
+        padding: 20px 0 140px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+    }
+    .sidebar-customer .brand { padding: 32px 24px 30px; text-align: center; border-bottom: 1px solid rgba(0,0,0,0.08); margin-bottom: 24px; background: transparent; border-radius: 0; }
+    .sidebar-customer .brand a { color: #5a1c04; text-decoration: none; font-size: 1.35rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 0; letter-spacing: 0.2px; }
+    .sidebar-customer .brand .logo-mark { width: 100%; max-width: 220px; height: auto; border-radius: 0; background: none; color: #5a1c04; display: inline-flex; align-items: center; justify-content: center; box-shadow: none; font-size: 1.4rem; }
+    .sidebar-customer .brand .logo-text { display: none; }
+    .sidebar-customer .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .sidebar-customer .nav-item { margin-bottom: 5px; }
+    .sidebar-customer .nav-link { display: flex; align-items: center; padding: 12px 18px; color: #5a2a0a; text-decoration: none; transition: all 0.3s; position: relative; border-left: 3px solid transparent; }
+    .sidebar-customer .nav-link:hover { background: rgba(255, 156, 120, 0.25); color: #2d1404; border-left-color: #ff7a45; padding-left: 21px; }
+    .sidebar-customer .nav-link.active { background: #ff7a45; color: #fff; border-left-color: #c2410c; font-weight: 600; }
+    .sidebar-customer .nav-link i { width: 22px; margin-right: 10px; font-size: 1rem; }
+    .sidebar-customer .user-section { position: fixed; bottom: 0; left: 0; width: 260px; border-top: 1px solid rgba(0,0,0,0.08); padding: 15px 18px; background: #fdd8cf; cursor: pointer; }
+    .sidebar-customer .user-card {
+        background: #ffe1d9;
+        border-radius: 8px;
+        padding: 10px 12px;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .sidebar-customer .user-card .name { font-weight: 700; color: #4a1f10; }
+    .sidebar-customer .user-card .email { color: #5a2a0a; font-size: 13px; }
+    .sidebar-customer .coin-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff7f3;
+        border: 1px solid rgba(0,0,0,0.06);
+        padding: 8px 10px;
+        border-radius: 10px;
+        margin-top: 10px;
+        box-shadow: inset 0 1px 2px rgba(255,255,255,0.8);
+        color: #5a2a0a;
+        font-weight: 600;
+    }
+    .sidebar-customer .coin-pill img {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+</style>
+<div class="sidebar-customer" id="customerSidebar">
+    <div class="brand">
+        <a href="{% url 'customer:welcome' %}">
+            <span class="logo-mark p-0" style="background:none; box-shadow:none;">
+                <img src="{% static 'img/logo.png' %}" alt="Logo" style="width: 100%; max-width: 220px; height: auto; object-fit: contain;">
+            </span>
+        </a>
+    </div>
+    <ul class="nav-menu">
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:welcome' %}"><i class="fas fa-home"></i>Welcome</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:dashboard' %}"><i class="fas fa-chart-bar"></i>Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:remove_ai' %}"><i class="fas fa-eraser"></i>Remove-Ai</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:job_checking' %}"><i class="fas fa-search"></i>Job Checking</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:structure_generate' %}"><i class="fas fa-sitemap"></i>Structure Generate</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:create_content' %}"><i class="fas fa-pen"></i>Create Content</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:coin_history' %}"><i class="fas fa-coins"></i>Your Coin History</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:pricing' %}"><i class="fas fa-tags"></i>Pricing Plan</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:submit_ticket' %}"><i class="fas fa-paper-plane"></i>Submit Ticket</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:my_tickets' %}"><i class="fas fa-ticket-alt"></i>My Tickets</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:meetings' %}"><i class="fas fa-handshake"></i>My Meetings</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:bookings' %}"><i class="fas fa-calendar-check"></i>My Bookings</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'customer:profile' %}"><i class="fas fa-user"></i>My Profile</a></li>
+    </ul>
+    <div class="user-section" id="customerUserSection">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="fw-semibold"><i class="fas fa-user-shield me-2"></i>{{ user.get_full_name }}</div>
+            <i class="fas fa-chevron-up" id="customerUserChevron"></i>
+        </div>
+        <div class="user-card mt-2" id="customerUserCard" style="display: none;">
+            <div class="name">{{ user.get_full_name }}</div>
+            <div class="email">{{ user.email }}</div>
+            <hr class="my-2">
+            <a class="d-block mb-2 text-decoration-none" href="{% url 'customer:profile' %}">
+                <i class="fas fa-id-card me-2 text-success"></i>Profile
+            </a>
+            <a class="d-block text-decoration-none" href="{% url 'accounts:logout' %}">
+                <i class="fas fa-sign-out-alt me-2 text-danger"></i>Logout
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('#customerSidebar .nav-link').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+
+        const userSection = document.getElementById('customerUserSection');
+        const userCard = document.getElementById('customerUserCard');
+        const chevron = document.getElementById('customerUserChevron');
+        function setChevron(open) {
+            if (!chevron) return;
+            chevron.classList.remove('fa-chevron-up','fa-chevron-down');
+            chevron.classList.add(open ? 'fa-chevron-down' : 'fa-chevron-up');
+        }
+        if (userSection && userCard) {
+            userSection.addEventListener('click', () => {
+                const isOpen = userCard.style.display === 'block';
+                userCard.style.display = isOpen ? 'none' : 'block';
+                setChevron(!isOpen);
+            });
+        }
+    })();
+</script>

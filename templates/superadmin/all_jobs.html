@@ -1,0 +1,139 @@
+<!-- templates/superadmin/all_jobs.html -->
+{% extends 'base.html' %}
+
+{% block title %}All Jobs - SuperAdmin{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-briefcase"></i> All Jobs</h1>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card card-stat shadow" data-filter="all">
+            <div class="card-body text-center">
+                <h3 class="text-primary">{{ total_jobs }}</h3>
+                <p class="mb-0">Total Jobs</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card card-stat shadow" data-filter="pending">
+            <div class="card-body text-center">
+                <h3 class="text-warning">{{ pending_jobs }}</h3>
+                <p class="mb-0">Pending Jobs</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card card-stat shadow">
+            <div class="card-body text-center">
+                <h3 class="text-success">₹{{ total_amount|floatformat:2 }}</h3>
+                <p class="mb-0">Total Amount</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter/Search -->
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <input type="hidden" name="filter" value="{{ active_filter }}">
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" value="{{ filter_params.search }}" class="form-control" placeholder="Job ID, topic, etc.">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    {% for value,label in status_choices %}
+                        <option value="{{ value }}" {% if filter_params.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Sub Category</label>
+                <input type="text" name="subcategory" value="{{ filter_params.subcategory }}" class="form-control" placeholder="Sub category keywords">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date Field</label>
+                <select name="date_field" class="form-select">
+                    <option value="expected" {% if filter_params.date_field == 'expected' %}selected{% endif %}>Expected Deadline</option>
+                    <option value="strict" {% if filter_params.date_field == 'strict' %}selected{% endif %}>Strict Deadline</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" name="date_from" value="{{ filter_params.date_from }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">End Date</label>
+                <input type="date" name="date_to" value="{{ filter_params.date_to }}" class="form-control">
+            </div>
+            <div class="col-md-3 d-flex gap-2 align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                <a href="{% url 'superadmin:all_jobs' %}" class="btn btn-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Jobs Table -->
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>SL NO</th>
+                        <th>Job ID</th>
+                        <th>System ID</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                        <th>Expected Deadline</th>
+                        <th>Strict Deadline</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td>{{ job.sl_no }}</td>
+                        <td>{{ job.job_id }}</td>
+                        <td>{{ job.system_id }}</td>
+                        <td>₹{{ job.amount }}</td>
+                        <td>
+                            <span class="badge bg-{% if job.status == 'PENDING' %}warning{% elif job.status == 'APPROVED' %}success{% elif job.status == 'COMPLETED' %}info{% else %}info{% endif %}">
+                                {{ job.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ job.created_by.get_full_name }}</td>
+                        <td>{{ job.expected_deadline|date:"M d, Y H:i" }}</td>
+                        <td>{{ job.strict_deadline|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'superadmin:job_detail' job.job_id %}" class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            {% if job.status == 'PENDING' %}
+                                <a href="{% url 'superadmin:new_jobs' %}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-cog"></i> Process
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">No jobs found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% include 'includes/pagination.html' with page_obj=page_obj pagination_base=pagination_base page_param='page' %}
+{% endblock %}

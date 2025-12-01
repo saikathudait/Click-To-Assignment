@@ -1,0 +1,631 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-chart-line me-2"></i>User Time-on-Page</h2>
+            <p class="text-muted mb-0">Active vs idle viewing time across every page, captured via the in-browser tracker and visible only to Super Admins.</p>
+        </div>
+        <div class="text-muted small">
+            Displaying in <strong>{{ unit|title }}</strong>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm card-stat">
+            <div class="card-body">
+                <div class="text-muted small">Total Active Time</div>
+                <div class="h4 mb-0">{{ total_active_display }} {{ unit_suffix }}</div>
+                <div class="text-muted small">{{ total_active|default:0|floatformat:0 }}s (raw)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm card-stat">
+            <div class="card-body">
+                <div class="text-muted small">Total Idle Time</div>
+                <div class="h4 mb-0">{{ total_idle_display }} {{ unit_suffix }}</div>
+                <div class="text-muted small">{{ total_idle|default:0|floatformat:0 }}s (raw)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm card-stat">
+            <div class="card-body">
+                <div class="text-muted small">Avg Active / Visit</div>
+                <div class="h4 mb-0">{{ avg_active_display }} {{ unit_suffix }}</div>
+                <div class="text-muted small">Across {{ visit_count }} visits</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm card-stat">
+            <div class="card-body">
+                <div class="text-muted small">Engagement Split</div>
+                <div class="h4 mb-0">{{ active_ratio }}% active / {{ idle_ratio }}% idle</div>
+                <div class="text-muted small">Sessions logged: {{ visit_count }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Filters</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row gy-3 gx-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">User (name, email or ID)</label>
+                <input type="text" name="user" value="{{ filters.user }}" class="form-control" placeholder="e.g. Sarah or sarah@company.com">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Page path</label>
+                <input type="text" name="path" value="{{ filters.path }}" class="form-control" placeholder="/jobs/123/">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Session ID</label>
+                <input type="text" name="session" value="{{ filters.session }}" class="form-control" placeholder="visit/session id">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">From date</label>
+                <input type="date" name="date_from" value="{{ filters.date_from }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To date</label>
+                <input type="date" name="date_to" value="{{ filters.date_to }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Display unit</label>
+                <select name="unit" class="form-select">
+                    <option value="seconds" {% if unit == 'seconds' %}selected{% endif %}>Seconds</option>
+                    <option value="minutes" {% if unit == 'minutes' %}selected{% endif %}>Minutes</option>
+                    <option value="hours" {% if unit == 'hours' %}selected{% endif %}>Hours</option>
+                </select>
+            </div>
+            <div class="col-md-12 d-flex gap-2 justify-content-end">
+                <a href="{% url 'superadmin:activity_analytics' %}" class="btn btn-outline-secondary">Reset</a>
+                <button type="submit" class="btn btn-success">Apply</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if not has_data %}
+    <div class="alert alert-info">No visit data found for this filter set.</div>
+{% else %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Top Pages by Active Time</h5>
+            <span class="text-muted small">Showing top {{ top_pages|length }} pages</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for page in top_pages %}
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded bg-light">
+                            <div class="fw-semibold text-truncate" title="{{ page.path }}">{{ page.path }}</div>
+                            <div class="text-muted small">{{ page.name }}</div>
+                            <div class="mt-2">
+                                <span class="badge bg-success">{{ page.active_display }} {{ unit_suffix }} active</span>
+                                <span class="badge bg-secondary">{{ page.visits }} visits</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">User-wise Time</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th class="text-end">Visits</th>
+                                <th class="text-end">Active</th>
+                                <th class="text-end">Idle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in user_rows %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">{{ row.name }}</div>
+                                        <div class="text-muted small">{{ row.email }}</div>
+                                    </td>
+                                    <td class="text-end">{{ row.visits }}</td>
+                                    <td class="text-end">
+                                        {{ row.active_display }} {{ unit_suffix }}
+                                        <div class="text-muted small">{{ row.active_human }}</div>
+                                    </td>
+                                    <td class="text-end">
+                                        {{ row.idle_display }} {{ unit_suffix }}
+                                        <div class="text-muted small">{{ row.idle_human }}</div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">No data</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center">
+                    <div class="small text-muted">
+                        Page {{ user_page_obj.number }} of {{ user_page_obj.paginator.num_pages }} | 10 per page | Total {{ user_total }}
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a class="btn btn-outline-secondary btn-sm {% if not user_page_obj.has_previous %}disabled{% endif %}"
+                           href="{% if user_page_obj.has_previous %}{{ user_pagination_base }}users_page={{ user_page_obj.previous_page_number }}{% else %}#{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <span class="small">{{ user_page_obj.number }} / {{ user_page_obj.paginator.num_pages }}</span>
+                        <a class="btn btn-outline-secondary btn-sm {% if not user_page_obj.has_next %}disabled{% endif %}"
+                           href="{% if user_page_obj.has_next %}{{ user_pagination_base }}users_page={{ user_page_obj.next_page_number }}{% else %}#{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Page-wise Time</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Page</th>
+                                <th class="text-end">Visits</th>
+                                <th class="text-end">Active</th>
+                                <th class="text-end">Idle</th>
+                                <th class="text-end">Avg Active</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in page_rows %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-truncate" title="{{ row.path }}">{{ row.path }}</div>
+                                        <div class="text-muted small">{{ row.name }}</div>
+                                    </td>
+                                    <td class="text-end">{{ row.visits }}</td>
+                                    <td class="text-end">{{ row.active_display }} {{ unit_suffix }}</td>
+                                    <td class="text-end">{{ row.idle_display }} {{ unit_suffix }}</td>
+                                    <td class="text-end">{{ row.avg_active_display }} {{ unit_suffix }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-3">No data</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center">
+                    <div class="small text-muted">
+                        Page {{ page_page_obj.number }} of {{ page_page_obj.paginator.num_pages }} | 10 per page | Total {{ page_total }}
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a class="btn btn-outline-secondary btn-sm {% if not page_page_obj.has_previous %}disabled{% endif %}"
+                           href="{% if page_page_obj.has_previous %}{{ page_pagination_base }}pages_page={{ page_page_obj.previous_page_number }}{% else %}#{% endif %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <span class="small">{{ page_page_obj.number }} / {{ page_page_obj.paginator.num_pages }}</span>
+                        <a class="btn btn-outline-secondary btn-sm {% if not page_page_obj.has_next %}disabled{% endif %}"
+                           href="{% if page_page_obj.has_next %}{{ page_pagination_base }}pages_page={{ page_page_obj.next_page_number }}{% else %}#{% endif %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Visits (enter/exit)</h5>
+            <span class="text-muted small">Showing {{ visit_page_obj.start_index }}-{{ visit_page_obj.end_index }} of {{ visit_total }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>User</th>
+                        <th>Page</th>
+                        <th>Entered</th>
+                        <th>Exited</th>
+                        <th class="text-end">Active</th>
+                        <th class="text-end">Idle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in visit_page_obj.object_list %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">{{ visit.user_name }}</div>
+                                <div class="text-muted small">{{ visit.user_email }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-truncate" style="max-width: 260px;" title="{{ visit.path }}">{{ visit.path }}</div>
+                                <div class="text-muted small">{{ visit.page_name }}</div>
+                            </td>
+                            <td class="text-muted small">
+                                {{ visit.started_at|date:"Y-m-d H:i:s" }}
+                            </td>
+                            <td class="text-muted small">
+                                {{ visit.ended_at|date:"Y-m-d H:i:s" }}
+                            </td>
+                            <td class="text-end">
+                                {{ visit.active_display }} {{ unit_suffix }}
+                                <div class="text-muted small">{{ visit.active_human }}</div>
+                            </td>
+                            <td class="text-end">
+                                {{ visit.idle_display }} {{ unit_suffix }}
+                                <div class="text-muted small">{{ visit.idle_human }}</div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">No visits for this filter.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center">
+            <div class="small text-muted">
+                Page {{ visit_page_obj.number }} of {{ visit_page_obj.paginator.num_pages }} | 20 per page | Total {{ visit_total }}
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a class="btn btn-outline-secondary btn-sm {% if not visit_page_obj.has_previous %}disabled{% endif %}"
+                   href="{% if visit_page_obj.has_previous %}{{ visit_pagination_base }}visits_page={{ visit_page_obj.previous_page_number }}{% else %}#{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <span class="small">{{ visit_page_obj.number }} / {{ visit_page_obj.paginator.num_pages }}</span>
+                <a class="btn btn-outline-secondary btn-sm {% if not visit_page_obj.has_next %}disabled{% endif %}"
+                   href="{% if visit_page_obj.has_next %}{{ visit_pagination_base }}visits_page={{ visit_page_obj.next_page_number }}{% else %}#{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Time Trend by Day</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th class="text-end">Visits</th>
+                        <th class="text-end">Active</th>
+                        <th class="text-end">Idle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in daily_page_obj.object_list %}
+                        <tr>
+                            <td>{{ row.date }}</td>
+                            <td class="text-end">{{ row.visits }}</td>
+                            <td class="text-end">{{ row.active_display }} {{ unit_suffix }}</td>
+                            <td class="text-end">{{ row.idle_display }} {{ unit_suffix }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">No data</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center">
+            <div class="small text-muted">
+                Page {{ daily_page_obj.number }} of {{ daily_page_obj.paginator.num_pages }} | 10 per page | Total {{ daily_total }}
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a class="btn btn-outline-secondary btn-sm {% if not daily_page_obj.has_previous %}disabled{% endif %}"
+                   href="{% if daily_page_obj.has_previous %}{{ daily_pagination_base }}days_page={{ daily_page_obj.previous_page_number }}{% else %}#{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <span class="small">{{ daily_page_obj.number }} / {{ daily_page_obj.paginator.num_pages }}</span>
+                <a class="btn btn-outline-secondary btn-sm {% if not daily_page_obj.has_next %}disabled{% endif %}"
+                   href="{% if daily_page_obj.has_next %}{{ daily_pagination_base }}days_page={{ daily_page_obj.next_page_number }}{% else %}#{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <h4 class="mb-3">Visual Insights</h4>
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">User-wise Total Time (hours)</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartUserTotal" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Page-wise Total Time (hours)</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartPageTotal" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Top 10 Pages by Time</h6>
+                        <span class="text-muted small">Active hours</span>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartTopPages" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Time Spent Trend Over Days</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartDailyTrend" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Per-User Time Trend</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartUserTrend" height="260"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Average Time per Visit by Page (minutes)</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartAvgTime" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Visits Count by Page</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartVisitCounts" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Active vs Idle Time (per User)</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartActiveIdle" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Session Duration Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartSessionHist" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Heatmap: Page vs Hour (Active seconds)</h6>
+                        <span class="text-muted small">Top pages</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr id="heatmapHead">
+                                        <th style="min-width: 160px;">Page</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="heatmapBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-muted small mt-2">Darker cells = more active seconds.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    if (!window.Chart) return;
+    const chartData = JSON.parse('{{ chart_data_json|escapejs }}' || '{}');
+    const palette = ['#2f855a','#3182ce','#805ad5','#dd6b20','#e53e3e','#319795','#718096','#38a169','#d69e2e','#4a5568'];
+
+    function barChart(id, labels, data, opts = {}) {
+        const ctx = document.getElementById(id);
+        if (!ctx || !labels || !labels.length) return;
+        new Chart(ctx, {
+            type: opts.type || 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: opts.label || 'Value',
+                    data,
+                    backgroundColor: opts.bgColor || '#2f855a',
+                    borderColor: opts.borderColor || '#276749',
+                    borderWidth: 1,
+                }],
+            },
+            options: {
+                indexAxis: opts.horizontal ? 'y' : 'x',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: opts.stacked || false },
+                    y: { stacked: opts.stacked || false, beginAtZero: true },
+                },
+                plugins: {
+                    legend: { display: !!opts.legend },
+                    tooltip: { mode: 'index', intersect: false },
+                },
+            },
+        });
+    }
+
+    function multiLine(id, labels, datasets) {
+        const ctx = document.getElementById(id);
+        if (!ctx || !labels.length || !datasets.length) return;
+        const ds = datasets.map((d, idx) => ({
+            label: d.label,
+            data: d.data,
+            fill: false,
+            borderColor: palette[idx % palette.length],
+            backgroundColor: palette[idx % palette.length],
+            tension: 0.2,
+        }));
+        new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: ds },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } },
+                scales: {
+                    y: { beginAtZero: true },
+                },
+            },
+        });
+    }
+
+    function stackedBar(id, labels, active, idle) {
+        const ctx = document.getElementById(id);
+        if (!ctx || !labels.length) return;
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Active (hrs)', data: active, backgroundColor: '#2f855a' },
+                    { label: 'Idle (hrs)', data: idle, backgroundColor: '#a0aec0' },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true },
+                },
+                plugins: { legend: { position: 'bottom' } },
+            },
+        });
+    }
+
+    function fillHeatmap() {
+        const tbody = document.getElementById('heatmapBody');
+        const headRow = document.getElementById('heatmapHead');
+        if (!tbody || !headRow) return;
+        const hm = chartData.heatmap || {};
+        const pages = hm.pages || [];
+        const hours = hm.hours || [];
+        const matrix = hm.matrix || [];
+        if (!pages.length || !hours.length) {
+            tbody.innerHTML = '<tr><td colspan="25" class="text-center text-muted py-3">No data</td></tr>';
+            return;
+        }
+        let maxVal = 0;
+        matrix.forEach(row => row.forEach(v => { if (v > maxVal) maxVal = v; }));
+        headRow.innerHTML = '';
+        const thPage = document.createElement('th');
+        thPage.style.minWidth = '160px';
+        thPage.textContent = 'Page';
+        headRow.appendChild(thPage);
+        hours.forEach(h => {
+            const th = document.createElement('th');
+            th.textContent = h;
+            headRow.appendChild(th);
+        });
+
+        tbody.innerHTML = '';
+        pages.forEach((page, i) => {
+            const tr = document.createElement('tr');
+            const tdPage = document.createElement('td');
+            tdPage.textContent = page;
+            tdPage.style.minWidth = '160px';
+            tr.appendChild(tdPage);
+            (matrix[i] || []).forEach(val => {
+                const td = document.createElement('td');
+                const intensity = maxVal ? Math.min(1, val / maxVal) : 0;
+                const alpha = 0.15 + (0.65 * intensity);
+                td.style.background = `rgba(49, 130, 206, ${alpha})`;
+                td.title = `${val} sec`;
+                td.textContent = val ? Math.round(val / 60) : '';
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+    }
+
+    const userTotal = chartData.user_total || {};
+    const pageTotal = chartData.page_total || {};
+    const topPages = chartData.page_total_top10 || {};
+    const dailyTrend = chartData.daily_trend || {};
+    const userTrend = chartData.user_trend || {};
+    const avgTime = chartData.avg_time || {};
+    const visitCounts = chartData.visit_counts || {};
+    const activeIdle = chartData.active_idle_user || {};
+    const sessionHist = chartData.session_hist || {};
+
+    barChart('chartUserTotal', userTotal.labels || [], userTotal.active_hours || [], { label: 'Active (hrs)' });
+    barChart('chartPageTotal', pageTotal.labels || [], pageTotal.active_hours || [], { label: 'Active (hrs)', horizontal: true });
+    barChart('chartTopPages', topPages.labels || [], topPages.active_hours || [], { label: 'Active (hrs)', horizontal: true });
+    barChart('chartDailyTrend', dailyTrend.labels || [], dailyTrend.active_hours || [], { label: 'Active (hrs)', type: 'line' });
+    multiLine('chartUserTrend', userTrend.labels || [], userTrend.datasets || []);
+    barChart('chartAvgTime', avgTime.labels || [], avgTime.avg_minutes || [], { label: 'Avg minutes', horizontal: true });
+    barChart('chartVisitCounts', visitCounts.labels || [], visitCounts.counts || [], { label: 'Visits', horizontal: true });
+    stackedBar('chartActiveIdle', activeIdle.labels || [], activeIdle.active_hours || [], activeIdle.idle_hours || []);
+    barChart('chartSessionHist', sessionHist.labels || [], sessionHist.counts || [], { label: 'Sessions' });
+    fillHeatmap();
+})();
+</script>
+{% endblock %}

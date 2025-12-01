@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-3">Ticket Details</h2>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div class="fw-semibold">Ticket ID: {{ ticket.ticket_id }}</div>
+        <div class="text-muted small">Status: {{ ticket.status }} | Priority: {{ ticket.priority }}</div>
+        <div class="text-muted small">Created: {{ ticket.created_at|date:"Y-m-d H:i" }} | Updated: {{ ticket.updated_at|date:"Y-m-d H:i" }}</div>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="{% url 'customer:my_tickets' %}">Back</a>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mt-3">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="fw-semibold">Subject</div>
+        <div class="text-muted">{{ ticket.subject }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Category</div>
+        <div class="text-muted">{{ ticket.category|default:'-' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Status</div>
+        <div class="text-muted">{{ ticket.status }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Priority</div>
+        <div class="text-muted">{{ ticket.priority }}</div>
+      </div>
+      <div class="col-12">
+        <div class="fw-semibold">Description</div>
+        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ ticket.description }}</pre>
+      </div>
+      <div class="col-12">
+        <div class="fw-semibold">Admin Notes</div>
+        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ ticket.admin_notes|default:"No notes provided by admin." }}</pre>
+      </div>
+      <div class="col-12">
+        <div class="fw-semibold">Attachment</div>
+        {% if ticket.attachment %}
+          <a class="btn btn-sm btn-outline-primary" href="{{ ticket.attachment.url }}" target="_blank">Download / View</a>
+        {% else %}
+          <div class="text-muted">No attachment provided.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

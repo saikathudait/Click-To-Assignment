@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}User Details{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="fas fa-id-card"></i> User Details</h2>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="text-muted small">Full Name</div>
+        <div class="fw-semibold">{{ user_obj.get_full_name }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-muted small">Email</div>
+        <div class="fw-semibold">{{ user_obj.email }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Role</div>
+        <div class="fw-semibold">{{ user_obj.get_role_display }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Employee ID</div>
+        <div class="fw-semibold">{{ user_obj.employee_id|default:"-" }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Customer Code</div>
+        <div class="fw-semibold">{{ user_obj.customer_code|default:"-" }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">WhatsApp No</div>
+        <div class="fw-semibold">{{ user_obj.whatsapp_country_code|default:"+91" }} {{ user_obj.whatsapp_no|default:"-" }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Last Qualification</div>
+        <div class="fw-semibold">{{ user_obj.last_qualification|default:"-" }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Joining Date</div>
+        <div class="fw-semibold">
+          {% if user_obj.joining_date %}{{ user_obj.joining_date|date:"Y-m-d" }}{% else %}-{% endif %}
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Approved</div>
+        <div class="fw-semibold">
+          {% if user_obj.is_approved %}
+            <span class="badge bg-success">Yes</span>
+          {% else %}
+            <span class="badge bg-secondary">No</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Active</div>
+        <div class="fw-semibold">
+          {% if user_obj.is_active %}
+            <span class="badge bg-success">Active</span>
+          {% else %}
+            <span class="badge bg-danger">Inactive</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">Role Locked</div>
+        <div class="fw-semibold">
+          {% if user_obj.role_locked %}
+            <span class="badge bg-primary">Locked</span>
+          {% else %}
+            <span class="badge bg-secondary">Unlocked</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-muted small">Approved At</div>
+        <div class="fw-semibold">
+          {% if user_obj.approved_at %}{{ user_obj.approved_at|date:"Y-m-d H:i" }}{% else %}-{% endif %}
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-muted small">Approved By</div>
+        <div class="fw-semibold">
+          {% if user_obj.approved_by %}{{ user_obj.approved_by.email }}{% else %}-{% endif %}
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-muted small">Date Joined</div>
+        <div class="fw-semibold">
+          {% if user_obj.date_joined %}{{ user_obj.date_joined|date:"Y-m-d H:i" }}{% else %}-{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0"><i class="fas fa-key"></i> Reset Password</h5>
+      <button class="btn btn-sm btn-outline-secondary" type="button" onclick="generateResetPassword()">Generate</button>
+    </div>
+    <form class="row g-3" method="post" action="{% url 'approvals:user_reset_password' user_obj.id %}">
+      {% csrf_token %}
+      <div class="col-md-8 col-lg-6">
+        <label class="form-label">New Password</label>
+        <div class="input-group">
+          <input type="text" class="form-control" name="password" id="resetPasswordInput" placeholder="Leave blank to auto-generate">
+          <button class="btn btn-outline-secondary" type="button" onclick="generateResetPassword()">Generate</button>
+        </div>
+        <div class="form-text">If left blank, a strong password will be generated.</div>
+      </div>
+      <div class="col-12">
+        <button class="btn btn-success" type="submit">Save Password</button>
+        <a class="btn btn-outline-secondary ms-2" href="{% url 'approvals:user_approval_list' %}"><i class="fas fa-arrow-left"></i> Back to list</a>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+function generateResetPassword() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@$!%*?&';
+  let pwd = '';
+  for (let i = 0; i < 12; i++) {
+    pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const field = document.getElementById('resetPasswordInput');
+  if (field) {
+    field.value = pwd;
+  }
+}
+</script>
+{% endblock %}

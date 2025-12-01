@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Pricing Plan Management</h2>
+<p class="text-muted">Super Admin-only: add and maintain pricing plan documentation/notes.</p>
+
+<div class="row g-3 mb-3">
+  {% for row in pricing_rules %}
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">
+          {% if row.key == 'CREATE_CONTENT' %}
+            {{ row.label }}
+          {% else %}
+            {{ row.label }}
+          {% endif %}
+        </div>
+        <div class="h4 mb-0">{{ row.coin_cost }} coins</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% if pricing_rules|length == 0 %}
+  <div class="col-12">
+    <div class="alert alert-info mb-0">No coin rules found.</div>
+  </div>
+  {% endif %}
+</div>
+
+{% if edit_mode %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post" class="vstack gap-3">
+      {% csrf_token %}
+      <div>
+        <label class="form-label">Pricing Plan Document</label>
+        <textarea class="form-control" name="pricing_plan_doc" rows="16" placeholder="Write or paste your pricing plan details here...">{{ pricing_plan_doc }}</textarea>
+        <div class="form-text">Last updated: {% if last_updated %}{{ last_updated|date:"Y-m-d H:i" }}{% else %}Never{% endif %}</div>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success" type="submit">Save</button>
+        <a class="btn btn-outline-secondary" href="{% url 'superadmin:customer_pricing' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% else %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <div>
+        <h5 class="mb-1">Pricing Plan Document</h5>
+        <div class="text-muted small">Last updated: {% if last_updated %}{{ last_updated|date:"Y-m-d H:i" }}{% else %}Never{% endif %}</div>
+      </div>
+      <a class="btn btn-primary btn-sm" href="?edit=1">Edit</a>
+    </div>
+    {% if pricing_plan_doc %}
+      <div class="border rounded p-3 bg-light" style="min-height: 240px;">
+        {{ pricing_plan_doc|linebreaks }}
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0">No content yet. Click Edit to add your pricing plan details.</div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

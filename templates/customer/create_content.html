@@ -1,0 +1,165 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-3">Create Content</h2>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Total Remaining Coins</div>
+        <div class="h4 mb-0">{{ coin_balance }} coins</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Minimum Cost (per 250 words)</div>
+        <div class="h4 mb-0">{{ content_cost|default:0 }} coins</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm" style="background: {{ theme_color }};">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Content Topic</label>
+          <input type="text" class="form-control" name="topic">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Target Word Count</label>
+          <input type="number" class="form-control" name="word_count">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Referencing Style</label>
+          <select class="form-select" name="referencing_style">
+            <option value="">Select Referencing Style</option>
+            <option>APA</option>
+            <option>APA7</option>
+            <option>MLA</option>
+            <option>Chicago</option>
+            <option>Turabian</option>
+            <option>Harvard</option>
+            <option>Vancouver</option>
+            <option>IEEE</option>
+            <option>OSCOLA</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Academic Style</label>
+          <select class="form-select" name="writing_style">
+            <option value="">Select Academic Style</option>
+            <option>Essay</option>
+            <option>Report</option>
+            <option>Article</option>
+            <option>Literature Review</option>
+            <option>Case Study</option>
+            <option>Book</option>
+            <option>Dissertation / Thesis</option>
+            <option>Annotated Bibliography</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Writing Tone</label>
+          <input type="text" class="form-control" name="writing_tone">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Academic Level</label>
+          <select class="form-select" name="academic_level">
+            <option value="">Select Academic Level</option>
+            <option>Undergraduate</option>
+            <option>Master's</option>
+            <option>Doctorate (PhD)</option>
+            <option>Professional</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Subject Field</label>
+          <input type="text" class="form-control" name="subject_field">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Structure & Guidelines</label>
+          <textarea class="form-control" rows="4" name="structure_guidelines"></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Summary / Notes</label>
+          <textarea class="form-control" rows="3" name="summary"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-primary mt-3" type="submit">Generate Content</button>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm mt-3">
+  <div class="card-body">
+    <h5 class="mb-3">Recent Content Requests</h5>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>SL No</th>
+            <th>Submission ID</th>
+            <th>Topic</th>
+            <th>Output Words</th>
+            <th>Status</th>
+            <th>Coins</th>
+            <th>Time</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if contents %}
+            {% for c in contents %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ c.submission_id }}</td>
+              <td>{{ c.topic|default:'-' }}</td>
+              <td>{% if c.output_words_count %}{{ c.output_words_count }}{% else %}-{% endif %}</td>
+              <td>{{ c.status }}</td>
+              <td>{{ c.coins_spent }}</td>
+              <td>{% if c.created_at %}{{ c.created_at|date:"Y-m-d H:i" }}{% else %}-{% endif %}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'customer:content_detail' c.submission_id %}">View</a>
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="8" class="text-center text-muted">No content submissions yet.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    {% if contents_page_obj %}
+    <div class="pt-3 d-flex justify-content-between align-items-center">
+      <div class="text-muted small">
+        Showing {{ contents_page_obj.start_index }} - {{ contents_page_obj.end_index }} of {{ contents_page_obj.paginator.count }}
+      </div>
+      <div class="btn-group">
+        {% if contents_page_obj.has_previous %}
+          <a class="btn btn-sm btn-outline-secondary" href="?cc_page=1">&laquo;</a>
+          <a class="btn btn-sm btn-outline-secondary" href="?cc_page={{ contents_page_obj.previous_page_number }}">&lsaquo;</a>
+        {% else %}
+          <span class="btn btn-sm btn-outline-secondary disabled">&laquo;</span>
+          <span class="btn btn-sm btn-outline-secondary disabled">&lsaquo;</span>
+        {% endif %}
+        <span class="btn btn-sm btn-outline-primary disabled">
+          {{ contents_page_obj.number }} / {{ contents_page_obj.paginator.num_pages }}
+        </span>
+        {% if contents_page_obj.has_next %}
+          <a class="btn btn-sm btn-outline-secondary" href="?cc_page={{ contents_page_obj.next_page_number }}">&rsaquo;</a>
+          <a class="btn btn-sm btn-outline-secondary" href="?cc_page={{ contents_page_obj.paginator.num_pages }}">&raquo;</a>
+        {% else %}
+          <span class="btn btn-sm btn-outline-secondary disabled">&rsaquo;</span>
+          <span class="btn btn-sm btn-outline-secondary disabled">&raquo;</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}View {{ content_type|title }} - {{ job.job_id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #A4F4CF;
+    }
+    
+    .content-container {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        margin: 20px auto;
+        max-width: 1200px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .content-header {
+        border-bottom: 2px solid #A4F4CF;
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .content-text {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        white-space: pre-wrap;
+        font-size: 14px;
+        line-height: 1.6;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .btn-back {
+        background: #A4F4CF;
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 20px;
+    }
+    
+    .btn-back:hover {
+        background: #8ee0b7;
+        color: #000;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .status-approved {
+        background: #28a745;
+        color: white;
+    }
+    
+    .status-pending {
+        background: #ffc107;
+        color: #000;
+    }
+    
+    .copy-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    
+    .copy-btn:hover {
+        background: #0056b3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="content-container">
+        <div class="content-header">
+            <h2>{{ content_type|title|replace:"_":" " }}</h2>
+            <p><strong>Job ID:</strong> {{ job.job_id }} | <strong>System ID:</strong> {{ job.system_id }}</p>
+            
+            {% if content %}
+                {% if content.is_approved %}
+                    <span class="status-badge status-approved">Approved</span>
+                {% else %}
+                    <span class="status-badge status-pending">Pending Approval</span>
+                {% endif %}
+                
+                <p class="mt-2">
+                    <small>
+                        <strong>Generated:</strong> {{ content.created_at|date:"d M Y, h:i A" }} | 
+                        <strong>Regenerations:</strong> {{ content.regeneration_count }}/3
+                    </small>
+                </p>
+            {% endif %}
+        </div>
+        
+        {% if content_text %}
+            <div style="position: relative;">
+                <button class="copy-btn" onclick="copyContent()">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+                <div class="content-text" id="contentText">{{ content_text }}</div>
+            </div>
+        {% else %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                No content generated yet for this section.
+            </div>
+        {% endif %}
+        
+        <div class="mt-4">
+            <a href="{% url 'superadmin:new_jobs' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Back to New Jobs
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyContent() {
+    const contentText = document.getElementById('contentText').innerText;
+    
+    // Create temporary textarea
+    const textarea = document.createElement('textarea');
+    textarea.value = contentText;
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        alert('Content copied to clipboard!');
+    } catch (err) {
+        alert('Failed to copy content');
+    }
+    
+    document.body.removeChild(textarea);
+}
+</script>
+{% endblock %}

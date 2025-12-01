@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<h2>Coin / Wallet Management</h2>
+<p class="text-muted mb-3">Manage balances, apply rules, and review wallet activity. Data shown below is from live customer profiles.</p>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Admin Coin Balance</div>
+        <div class="h4 mb-0">{{ admin_coin_balance }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Total Coins Created</div>
+        <div class="h4 mb-0">{{ admin_coin_total_created }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Customer Coin Balance</div>
+        <div class="h4 mb-0">{{ total_balance }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Total Customers</div>
+        <div class="h4 mb-0">{{ total_customers }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <form class="row g-3" method="get">
+      <div class="col-md-3">
+        <label class="form-label">Search (Name/Email/ID)</label>
+        <input class="form-control" type="text" name="search" value="{{ search }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status">
+          <option value="">All</option>
+          <option value="ACTIVE" {% if status_filter == 'ACTIVE' %}selected{% endif %}>Active</option>
+          <option value="INACTIVE" {% if status_filter == 'INACTIVE' %}selected{% endif %}>Inactive</option>
+          <option value="BLOCKED" {% if status_filter == 'BLOCKED' %}selected{% endif %}>Blocked</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Min Balance</label>
+        <input class="form-control" type="number" name="min_balance" value="{{ min_balance }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Max Balance</label>
+        <input class="form-control" type="number" name="max_balance" value="{{ max_balance }}">
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-success" type="submit">Apply</button>
+        <a class="btn btn-outline-secondary" href="{% url 'superadmin:customer_wallets' %}">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex align-items-center mb-3">
+      <div class="coin-logo me-3"></div>
+      <div>
+        <h5 class="mb-0">Create Coin</h5>
+        <div class="text-muted small">Use the provided coin emblem as the logo.</div>
+      </div>
+    </div>
+    <div class="alert alert-warning py-2 small mb-3">This adds to Admin Coin Balance and Total Created. No naming fields; enter amount to mint.</div>
+    <form class="row g-3" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="form_type" value="create_coin">
+      <div class="col-md-4">
+        <label class="form-label">Amount to Create</label>
+        <input type="number" min="1" class="form-control" name="create_amount" placeholder="e.g. 100000" required>
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-primary w-100" type="submit">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Manual credit/debit</h5>
+    {% if success_message %}
+      <div class="alert alert-success py-2 mb-3">{{ success_message }}</div>
+    {% endif %}
+    {% if error_message %}
+      <div class="alert alert-danger py-2 mb-3">{{ error_message }}</div>
+    {% endif %}
+    <div class="alert alert-warning py-2 small mb-3">
+      This form queues a request; hook it to your ledger model to persist and update balances.
+    </div>
+    <form class="row g-3" method="post">
+      {% csrf_token %}
+      <div class="col-md-4">
+        <label class="form-label">Select Customer</label>
+        <select class="form-select" name="customer_profile_id" required>
+          <option value="">-- choose --</option>
+          {% for row in rows %}
+              {% with opt_id=row.wallet.id %}
+                {% with opt_id_str=opt_id|stringformat:"s" %}
+                <option value="{{ opt_id_str }}" {% if request.POST.customer_profile_id == opt_id_str %}selected{% endif %}>{{ row.employee_id }} — {{ row.name }} ({{ row.email }})</option>
+                {% endwith %}
+              {% endwith %}
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Action</label>
+        <select class="form-select" name="action" required>
+          <option value="CREDIT" {% if request.POST.action == "CREDIT" %}selected{% endif %}>Add Coins</option>
+          <option value="DEBIT" {% if request.POST.action == "DEBIT" %}selected{% endif %}>Deduct Coins</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Amount</label>
+        <input type="number" min="1" class="form-control" name="amount" value="{{ request.POST.amount }}" placeholder="e.g. 50" required>
+      </div>
+      <div class="col-md-10">
+        <label class="form-label">Reason / Note</label>
+        <input type="text" class="form-control" name="note" value="{{ request.POST.note }}" placeholder="e.g. Manual adjustment for refund">
+      </div>
+      <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-success w-100" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-header fw-bold">customer_wallets</div>
+  <div class="card-body table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>id</th>
+          <th>employee_id</th>
+          <th>customer_name</th>
+          <th>balance</th>
+          <th>status</th>
+          <th>last_updated_at</th>
+          <th>created_at</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows %}
+          {% for row in rows %}
+            <tr>
+              <td>{{ row.wallet.id }}</td>
+              <td>{% if row.employee_id %}{{ row.employee_id }}{% else %}N/A{% endif %}</td>
+              <td>{{ row.name|default:row.email|default:'N/A' }}</td>
+              <td>{{ row.balance }}</td>
+              <td>
+                {% if row.status == 'BLOCKED' or row.status == 'FROZEN' %}
+                  <span class="badge bg-dark">FROZEN</span>
+                {% elif row.status == 'INACTIVE' %}
+                  <span class="badge bg-secondary">INACTIVE</span>
+                {% else %}
+                  <span class="badge bg-success">ACTIVE</span>
+                {% endif %}
+              </td>
+              <td>{{ row.updated_at|date:"Y-m-d H:i" }}</td>
+              <td>{{ row.created_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="7" class="text-center text-muted">No wallets found.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+    <div class="text-muted small">Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} | 20 per page</div>
+    <div class="d-flex align-items-center gap-2">
+      <a class="btn btn-outline-secondary btn-sm {% if not page_obj.has_previous %}disabled{% endif %}" href="{% if page_obj.has_previous %}{{ pagination_base }}page={{ page_obj.previous_page_number }}{% else %}#{% endif %}"><i class="fas fa-chevron-left"></i></a>
+      <span class="small">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      <a class="btn btn-outline-secondary btn-sm {% if not page_obj.has_next %}disabled{% endif %}" href="{% if page_obj.has_next %}{{ pagination_base }}page={{ page_obj.next_page_number }}{% else %}#{% endif %}"><i class="fas fa-chevron-right"></i></a>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-header fw-bold">coin_transactions (ledger)</div>
+  <div class="card-body table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>id</th>
+          <th>txn_id</th>
+          <th>wallet_id</th>
+          <th>employee_id</th>
+          <th>txn_type</th>
+          <th>amount</th>
+          <th>before_balance</th>
+          <th>after_balance</th>
+          <th>source</th>
+          <th>related_object_type</th>
+          <th>related_object_id</th>
+          <th>reason</th>
+          <th>expiry_date</th>
+          <th>created_by_role</th>
+          <th>created_by_id</th>
+          <th>created_at</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if txn_page_obj and txn_page_obj.object_list %}
+          {% for t in txn_page_obj.object_list %}
+          <tr>
+            <td>{{ t.id }}</td>
+            <td>{{ t.txn_id }}</td>
+            <td>{{ t.wallet_id }}</td>
+            <td>{{ t.customer.employee_id|default:t.customer.email }}</td>
+            <td>{{ t.txn_type }}</td>
+            <td>{{ t.amount }}</td>
+            <td>{{ t.before_balance }}</td>
+            <td>{{ t.after_balance }}</td>
+            <td>{{ t.source }}</td>
+            <td>{{ t.related_object_type }}</td>
+            <td>{{ t.related_object_id }}</td>
+            <td>{{ t.reason }}</td>
+            <td>{% if t.expiry_date %}{{ t.expiry_date|date:"Y-m-d H:i" }}{% else %}-{% endif %}</td>
+            <td>{{ t.created_by_role }}</td>
+            <td>{% if t.created_by_id %}{{ t.created_by_id.email }}{% endif %}</td>
+            <td>{{ t.created_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="16" class="text-center text-muted">No transactions found.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+    <div class="text-muted small">
+      {% if txn_page_obj %}
+        Showing {{ txn_page_obj.start_index }}-{{ txn_page_obj.end_index }} of {{ txn_page_obj.paginator.count }} | 10 per page
+      {% else %}
+        No records
+      {% endif %}
+    </div>
+    {% if txn_page_obj %}
+    <div class="d-flex align-items-center gap-2">
+      <a class="btn btn-outline-secondary btn-sm {% if not txn_page_obj.has_previous %}disabled{% endif %}"
+         href="{% if txn_page_obj.has_previous %}{{ txn_pagination_base }}tx_page={{ txn_page_obj.previous_page_number }}{% else %}#{% endif %}">
+         <i class="fas fa-chevron-left"></i>
+      </a>
+      <span class="small">{{ txn_page_obj.number }} / {{ txn_page_obj.paginator.num_pages }}</span>
+      <a class="btn btn-outline-secondary btn-sm {% if not txn_page_obj.has_next %}disabled{% endif %}"
+         href="{% if txn_page_obj.has_next %}{{ txn_pagination_base }}tx_page={{ txn_page_obj.next_page_number }}{% else %}#{% endif %}">
+         <i class="fas fa-chevron-right"></i>
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header fw-bold">coin_rules</div>
+  <div class="card-body table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>id</th>
+          <th>service_name</th>
+          <th>coin_cost</th>
+          <th>min_balance_required</th>
+          <th>expiry_enabled</th>
+          <th>expiry_days</th>
+          <th>refund_enabled</th>
+          <th>updated_by</th>
+          <th>updated_at</th>
+          <th>created_at</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if coin_rules %}
+          {% for r in coin_rules %}
+          <tr>
+            <td>{{ r.id }}</td>
+            <td>{{ r.service_name }}</td>
+            <td>{{ r.coin_cost }}</td>
+            <td>{{ r.min_balance_required }}</td>
+            <td>{{ r.expiry_enabled }}</td>
+            <td>{% if r.expiry_days %}{{ r.expiry_days }}{% else %}-{% endif %}</td>
+            <td>{{ r.refund_enabled }}</td>
+            <td>{% if r.updated_by %}{{ r.updated_by.email }}{% else %}-{% endif %}</td>
+            <td>{{ r.updated_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ r.created_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="10" class="text-center text-muted">No rules configured.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="mb-3">How this wallet system works</h5>
+    <ul class="mb-3">
+      <li>Each customer has a wallet (balance, status) tied to their profile.</li>
+      <li>Admin-controlled rules decide per-service coin costs, minimum balance checks, refunds, and optional expiry.</li>
+      <li>Credits/Debits (including admin actions) update balance and keep a history; automatic deductions happen on service use.</li>
+      <li>Expiry (if enabled) auto-deducts and logs expired coins.</li>
+      <li>Customers can see only their own history; Super Admin sees all wallets and summaries.</li>
+    </ul>
+    <p class="text-muted small mb-0">Extend this page with transaction history and rule editors once those models are added.</p>
+  </div>
+</div>
+
+<style>
+.coin-logo{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background-image:url("{% static 'img/Coin.png' %}");
+  background-size:cover;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+}
+</style>
+{% endblock %}

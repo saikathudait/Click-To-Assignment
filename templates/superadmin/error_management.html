@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{# templates/superadmin/error_management.html #}
+
+{% block title %}Error Management{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h1 class="mb-1"><i class="fas fa-bug"></i> Error Management</h1>
+        <p class="text-muted mb-0">Super Admin only. Capture, review, and resolve issues reported by Marketing.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Incoming Reports</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Auto-captures page URL, role, user, timestamp.</li>
+                    <li>Marketing supplies description, optional screenshot/file, error text.</li>
+                    <li>Default status: <span class="badge bg-secondary">Open</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Super Admin Controls</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>View who reported, which page, and when.</li>
+                    <li>Download attachments/screenshots.</li>
+                    <li>Set status: Open → In Progress → Resolved → Closed.</li>
+                    <li>Set priority: Low / Medium / High.</li>
+                    <li>Add internal notes; changes are audit-logged.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Notifications & Visibility</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Super Admin bell alerts on new issue.</li>
+                    <li>Optional email can be added later.</li>
+                    <li>Marketing “My Reported Issues” can show status/comments.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Latest Error Logs (via ?error_code=EFR-XXX)</h5>
+        <span class="text-muted small">Showing up to 50 recent entries</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive mb-0">
+            <table class="table table-sm table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Time</th>
+                        <th scope="col">Code</th>
+                        <th scope="col">Message</th>
+                        <th scope="col">User</th>
+                        <th scope="col">Role</th>
+                        <th scope="col">Path</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>{{ log.created_at|date:"M d, Y H:i" }}</td>
+                            <td><span class="badge bg-secondary">{{ log.code }}</span></td>
+                            <td>{{ log.message|truncatechars:120 }}</td>
+                            <td>{{ log.user.get_full_name|default:log.user|default:"-" }}</td>
+                            <td>{{ log.role|default:"-" }}</td>
+                            <td class="text-muted small">{{ log.path }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">No error logs recorded yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">A) Report Issue Form / Submission Errors (Marketing)</h5>
+            </div>
+            <div class="card-body small">
+                <ul class="mb-0">
+                    <li><strong>EFR-001 — EMPTY_DESCRIPTION</strong>: Please write a short description of the issue.</li>
+                    <li><strong>EFR-002 — INVALID_FILE_TYPE</strong>: File type not supported. Upload PNG/JPG/PDF only.</li>
+                    <li><strong>EFR-003 — FILE_TOO_LARGE</strong>: File too large. Max allowed size is X MB.</li>
+                    <li><strong>EFR-004 — MULTIPLE_FILES_NOT_ALLOWED</strong>: Only one attachment is allowed.</li>
+                    <li><strong>EFR-005 — PAGE_CONTEXT_MISSING</strong>: Something went wrong while sending report. Try again.</li>
+                    <li><strong>EFR-006 — DUPLICATE_REPORT</strong>: You already reported this issue recently.</li>
+                    <li><strong>EFR-007 — SESSION_EXPIRED</strong>: Session expired. Please login again.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">B) Access / Permission Errors</h5>
+            </div>
+            <div class="card-body small">
+                <ul class="mb-0">
+                    <li><strong>EFR-101 — UNAUTHORIZED_ACCESS</strong>: You don’t have permission to access this page.</li>
+                    <li><strong>EFR-102 — ROLE_NOT_ALLOWED</strong>: Your role cannot report issues here.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-3">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">C) Ticket / Issue Lifecycle Errors (Super Admin)</h5>
+            </div>
+            <div class="card-body small">
+                <ul class="mb-0">
+                    <li><strong>EFR-201 — TICKET_NOT_FOUND</strong>: Issue not found.</li>
+                    <li><strong>EFR-202 — INVALID_STATUS_UPDATE</strong>: Invalid status change.</li>
+                    <li><strong>EFR-203 — ALREADY_RESOLVED</strong>: This issue is already resolved.</li>
+                    <li><strong>EFR-204 — COMMENT_EMPTY</strong>: Comment cannot be empty.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">D) System / Internal Errors</h5>
+            </div>
+            <div class="card-body small">
+                <ul class="mb-0">
+                    <li><strong>EFR-901 — DB_SAVE_FAILED</strong>: Could not submit report. Please try again.</li>
+                    <li><strong>EFR-902 — FILE_UPLOAD_FAILED</strong>: Attachment upload failed. Submit without file or try again.</li>
+                    <li><strong>EFR-903 — NOTIFICATION_FAILED</strong>: Issue created, but notify failed.</li>
+                    <li><strong>EFR-904 — RATE_LIMITED</strong>: Too many reports. Please wait and try again.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">Suggested Issue Statuses</h5>
+    </div>
+    <div class="card-body">
+        <span class="badge bg-secondary me-2">OPEN</span>
+        <span class="badge bg-info text-dark me-2">IN_PROGRESS</span>
+        <span class="badge bg-success me-2">RESOLVED</span>
+        <span class="badge bg-dark">CLOSED</span>
+        <p class="text-muted small mb-0 mt-2">Use a simple workflow: Open → In Progress → Resolved → Closed. Enforce valid transitions to avoid EFR-202.</p>
+    </div>
+</div>
+{% endblock %}

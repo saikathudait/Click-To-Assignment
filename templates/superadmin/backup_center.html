@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Backup Center{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h1 class="h3 mb-2">
+                <i class="fas fa-database"></i> Backup / Export Center
+            </h1>
+            <p class="text-muted mb-0">
+                Create a snapshot of every module in CSV or Excel format. Only Super Admins can access this page.
+            </p>
+        </div>
+        <div class="text-md-end mt-3 mt-md-0">
+            <span class="badge bg-success">Access granted</span>
+            <div class="small text-muted">Refreshed {{ now|date:"M d, Y H:i" }}</div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <p class="text-uppercase text-muted small mb-1">Tables available</p>
+                    <h3 class="mb-0">{{ available_table_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <p class="text-uppercase text-muted small mb-1">Estimated rows</p>
+                    <h3 class="mb-0">
+                        {% if total_record_count %}
+                            {{ total_record_count|intcomma }}
+                        {% else %}
+                            Unknown
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <p class="text-uppercase text-muted small mb-1">Security</p>
+                    <h3 class="mb-0">Super Admin only</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-dark text-white">
+                    <strong>Create Export</strong>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Format</label>
+                            {{ form.export_format }}
+                            {% if form.export_format.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.export_format.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="{{ form.status.id_for_label }}">
+                                Status (module)
+                            </label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.status.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" for="{{ form.start_date.id_for_label }}">
+                                    Start date
+                                </label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.start_date.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" for="{{ form.end_date.id_for_label }}">
+                                    End date
+                                </label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.end_date.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="form-check form-switch mb-3 mt-3">
+                            {{ form.include_all }}
+                            <label class="form-check-label" for="{{ form.include_all.id_for_label }}">
+                                {{ form.include_all.label }}
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="{{ form.tables.id_for_label }}">
+                                Tables
+                            </label>
+                            <div class="border rounded p-3 scroll-area" style="max-height: 280px; overflow-y: auto;">
+                                {% if form.fields.tables.choices %}
+                                    {{ form.tables }}
+                                {% else %}
+                                    <p class="text-muted mb-0">No tables match the current status filter.</p>
+                                {% endif %}
+                            </div>
+                            {% if form.tables.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.tables.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <p class="small text-muted">
+                            CSV exports download as a ZIP with one file per table. Excel exports generate a single workbook with a sheet for every table. Date filters apply when a model exposes fields such as <code>created_at</code> or <code>updated_at</code>.
+                        </p>
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-success" type="submit">
+                                <i class="fas fa-download"></i> Export selected data
+                            </button>
+                            <button class="btn btn-outline-secondary" type="reset">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-light">
+                    <strong>Table Overview</strong>
+                    {% if status_filter %}
+                        <span class="badge bg-info text-dark ms-2">{{ status_filter|title }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if table_metadata %}
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Module</th>
+                                        <th class="text-end">Records</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for table in table_metadata %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ table.label }}</strong>
+                                                <div class="text-muted small">App: {{ table.app_label }}</div>
+                                            </td>
+                                            <td class="text-end">
+                                                {% if table.count is None %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% else %}
+                                                    {{ table.count|intcomma }}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No tables available for export.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script>
+        (function() {
+            const statusSelect = document.getElementById('{{ form.status.auto_id }}');
+            const tableInputs = document.querySelectorAll('input[name="{{ form.tables.html_name }}"]');
+            const tableAppMap = JSON.parse('{{ table_app_map_json|escapejs }}');
+
+            function filterTables() {
+                const selected = statusSelect ? statusSelect.value : '';
+                tableInputs.forEach(input => {
+                    const wrapper = input.closest('li') || input.parentElement;
+                    if (!wrapper) return;
+                    const app = tableAppMap[input.value] || '';
+                    const show = !selected || selected === app;
+                    wrapper.style.display = show ? '' : 'none';
+                });
+            }
+
+            if (statusSelect) {
+                statusSelect.addEventListener('change', filterTables);
+                filterTables();
+            }
+        })();
+    </script>
+{% endblock %}

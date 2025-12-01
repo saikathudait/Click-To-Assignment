@@ -1,0 +1,110 @@
+<!-- templates/profiles/profile_update_request.html -->
+{% extends 'base.html' %}
+
+{% block title %}Request Profile Update{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-edit"></i> Request Profile Update</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="profileUpdateForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Select Field to Update *</label>
+                        {{ form.request_type }}
+                    </div>
+                    
+                    <div id="fieldContainer">
+                        <div class="mb-3">
+                            <label class="form-label">Current Value</label>
+                            {{ form.current_value }}
+                        </div>
+                        
+                        <div class="mb-3" id="updatedValueField">
+                            <label class="form-label">Updated Value</label>
+                            {{ form.updated_value }}
+                        </div>
+                        
+                        <div class="mb-3 d-none" id="profilePictureField">
+                            <label class="form-label">New Profile Picture</label>
+                            {{ form.new_profile_picture }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane"></i> Submit Request
+                        </button>
+                        <a href="{% url 'profiles:profile' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Handle both possible IDs (default Django id, or custom one)
+    const typeSelect = document.getElementById('id_request_type') || document.getElementById('request_type');
+    const currentValue = document.getElementById('id_current_value');
+    const updatedValueField = document.getElementById('updatedValueField');
+    const profilePictureField = document.getElementById('profilePictureField');
+    const updatedInput = document.getElementById('id_updated_value');
+
+    if (!typeSelect) return;
+
+    function handleTypeChange() {
+        const requestType = typeSelect.value;  // e.g. "profile_picture", "whatsapp_number", etc.
+
+        // Default: show text input, hide file input
+        updatedValueField.classList.remove('d-none');
+        profilePictureField.classList.add('d-none');
+        if (updatedInput) updatedInput.disabled = false;
+
+        {% if user %}
+        // Set current value & toggle fields
+        switch (requestType) {
+            case 'profile_picture':
+                // Only file upload for profile picture
+                updatedValueField.classList.add('d-none');
+                profilePictureField.classList.remove('d-none');
+                if (updatedInput) updatedInput.disabled = true;
+                if (currentValue) currentValue.value = 'Current profile picture';
+                break;
+            case 'first_name':
+                if (currentValue) currentValue.value = '{{ user.first_name|escapejs }}';
+                break;
+            case 'last_name':
+                if (currentValue) currentValue.value = '{{ user.last_name|escapejs }}';
+                break;
+            case 'email':
+                if (currentValue) currentValue.value = '{{ user.email|escapejs }}';
+                break;
+            case 'whatsapp_number':
+                if (currentValue) currentValue.value = '{{ user.whatsapp_country_code }} {{ user.whatsapp_no }}';
+                break;
+            case 'last_qualification':
+                if (currentValue) currentValue.value = '{{ user.last_qualification|default_if_none:""|escapejs }}';
+                break;
+            default:
+                if (currentValue) currentValue.value = '';
+        }
+        {% endif %}
+    }
+
+    // Bind change event and run once on load
+    typeSelect.addEventListener('change', handleTypeChange);
+    handleTypeChange();
+});
+</script>
+{% endblock %}

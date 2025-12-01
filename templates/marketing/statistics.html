@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{# templates/marketing/statistics.html #}
+{% block title %}My Statistics - Marketing{% endblock %}
+{% block extra_css %}
+<style>
+    .stats-card {border-radius: 12px; box-shadow: 0 6px 16px rgba(0,0,0,0.08); background:#fff; border:1px solid rgba(0,0,0,0.05);}
+    .stats-card:hover {transform: translateY(-2px);}
+    .chart-box {background:#fff; border-radius:12px; border:1px solid rgba(0,0,0,0.05); box-shadow:0 6px 16px rgba(0,0,0,0.06); padding:12px; min-height:320px;}
+    .chart-box canvas {height:240px !important; width:100% !important;}
+    .pill {padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600;}
+    .tag-muted {background:#eef2f7; color:#334155;}
+    .tag-success {background:#ecfdf3; color:#166534;}
+    .tag-warning {background:#fff7ed; color:#c2410c;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h1 class="mb-1"><i class="fas fa-chart-pie"></i> My Statistics</h1>
+        <p class="text-muted mb-0">These charts are built only from your own jobs.</p>
+    </div>
+    <a href="{% url 'marketing:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3">
+        <div class="stats-card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="pill tag-muted">Total jobs</span><i class="fas fa-briefcase text-primary"></i>
+            </div>
+            <h3 class="mt-2 mb-0">{{ total_jobs }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="pill tag-warning">Pending approvals</span><i class="fas fa-clock text-warning"></i>
+            </div>
+            <h3 class="mt-2 mb-0">{{ pending_jobs }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="pill tag-muted">Reworks</span><i class="fas fa-undo text-secondary"></i>
+            </div>
+            <h3 class="mt-2 mb-0">{{ rework_total }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="pill tag-warning">Overdue</span><i class="fas fa-exclamation-circle text-danger"></i>
+            </div>
+            <h3 class="mt-2 mb-0">{{ overdue_jobs }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="chart-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">My jobs by status</h5>
+                <span class="pill tag-muted">Workload</span>
+            </div>
+            <canvas id="statusChart" height="220"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chart-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">My jobs created over time</h5>
+                <span class="pill tag-muted">Timeline</span>
+            </div>
+            <canvas id="createdChart" height="220"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="chart-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Approved vs Rejected</h5>
+                <span class="pill tag-success">Outcome</span>
+            </div>
+            <canvas id="approvalChart" height="220"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chart-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Pending approvals trend</h5>
+                <span class="pill tag-muted">Awaiting SA</span>
+            </div>
+            <canvas id="pendingTrendChart" height="220"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="chart-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Rework trend</h5>
+                <span class="pill tag-warning">Reduce repeats</span>
+            </div>
+            <canvas id="reworkTrendChart" height="220"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chart-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Rework buckets</h5>
+                <span class="pill tag-muted">Stability</span>
+            </div>
+            <canvas id="reworkBucketChart" height="220"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="chart-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Deadline buckets</h5>
+                <span class="pill tag-warning">Upcoming</span>
+            </div>
+            <canvas id="deadlineChart" height="220"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="chart-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">On-time vs late</h5>
+                <span class="pill tag-muted">Delivery</span>
+            </div>
+            <canvas id="onTimeChart" height="220"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function renderChartOrEmpty(canvasId, hasData, build) {
+        const el = document.getElementById(canvasId);
+        if (!el) return;
+        if (!hasData) {
+            el.parentElement.innerHTML = '<div class="text-center text-muted py-4">No data for your jobs yet</div>';
+            return;
+        }
+        build(el);
+    }
+
+    const statusCounts = JSON.parse('{{ status_counts_json|escapejs }}' || '{}');
+    const createdTrend = JSON.parse('{{ created_trend_json|escapejs }}' || '[]');
+    const pendingTrend = JSON.parse('{{ pending_trend_json|escapejs }}' || '[]');
+    const approvalData = JSON.parse('{{ approval_json|escapejs }}' || '{}');
+    const reworkTrend = JSON.parse('{{ rework_trend_json|escapejs }}' || '[]');
+    const reworkBuckets = JSON.parse('{{ rework_buckets_json|escapejs }}' || '{}');
+    const deadlineBuckets = JSON.parse('{{ deadline_buckets_json|escapejs }}' || '{}');
+    const onTimeLate = JSON.parse('{{ on_time_late_json|escapejs }}' || '{}');
+
+    renderChartOrEmpty('statusChart', Object.keys(statusCounts).length > 0, (ctx) => {
+        const labels = Object.keys(statusCounts);
+        const values = labels.map(k => statusCounts[k]);
+        new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ label: 'Jobs', data: values, backgroundColor: '#2563eb', borderRadius: 6 }] },
+            options: { responsive: true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}}
+        });
+    });
+
+    renderChartOrEmpty('createdChart', createdTrend.length > 0, (ctx) => {
+        new Chart(ctx, {
+            type: 'line',
+            data: { labels: createdTrend.map(i=>i.date), datasets:[{label:'Jobs created', data: createdTrend.map(i=>i.count), borderColor:'#0ea5e9', backgroundColor:'rgba(14,165,233,0.15)', fill:true, tension:0.35}]},
+            options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}}
+        });
+    });
+
+    renderChartOrEmpty('approvalChart', true, (ctx) => {
+        const centerTextPlugin = {
+            id:'centerText',
+            afterDraw(chart){
+                const {ctx, width, height} = chart;
+                ctx.save();
+                ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#4b5563'; ctx.font='14px Arial';
+                ctx.fillText(`${approvalData.approved||0} approved / ${approvalData.rejected||0} rejected`, width/2, height/2);
+                ctx.restore();
+            }
+        };
+        new Chart(ctx, {
+            type: 'doughnut',
+            plugins: [centerTextPlugin],
+            data: { labels:['Approved','Rejected'], datasets:[{ data:[approvalData.approved||0, approvalData.rejected||0], backgroundColor:['#16a34a','#ef4444'] }] },
+            options:{responsive:true}
+        });
+    });
+
+    renderChartOrEmpty('pendingTrendChart', pendingTrend.length > 0, (ctx) => {
+        new Chart(ctx, {
+            type: 'line',
+            data: { labels: pendingTrend.map(i=>i.date), datasets:[{label:'Pending approvals', data: pendingTrend.map(i=>i.count), borderColor:'#f97316', backgroundColor:'rgba(249,115,22,0.15)', fill:true, tension:0.35}]},
+            options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}}
+        });
+    });
+
+    renderChartOrEmpty('reworkTrendChart', true, (ctx) => {
+        new Chart(ctx, {
+            type: 'line',
+            data: { labels: reworkTrend.map(i=>i.date || ''), datasets:[{label:'Reworks', data: reworkTrend.map(i=>i.count || 0), borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.15)', fill:true, tension:0.35}]},
+            options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}}
+        });
+    });
+
+    renderChartOrEmpty('reworkBucketChart', Object.keys(reworkBuckets).length > 0, (ctx) => {
+        const labels = Object.keys(reworkBuckets);
+        const values = labels.map(k=>reworkBuckets[k]);
+        new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets:[{label:'Jobs', data: values, backgroundColor:'#1f2937', borderRadius:6}]},
+            options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}}
+        });
+    });
+
+    renderChartOrEmpty('deadlineChart', Object.keys(deadlineBuckets).length > 0, (ctx) => {
+        const labels = Object.keys(deadlineBuckets);
+        const values = labels.map(k=>deadlineBuckets[k]);
+        new Chart(ctx, {
+            type: 'bar',
+            data:{labels, datasets:[{label:'Jobs', data: values, backgroundColor:'#f97316', borderRadius:6}]},
+            options:{responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}}
+        });
+    });
+
+    renderChartOrEmpty('onTimeChart', true, (ctx) => {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data:{labels:['On time','Late'], datasets:[{data:[onTimeLate.on_time||0, onTimeLate.late||0], backgroundColor:['#22c55e','#f43f5e']}]},
+            options:{responsive:true}
+        });
+    });
+</script>
+{% endblock %}

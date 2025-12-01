@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Job Checking Submission</h2>
+<p class="text-muted">Full details of a single submission.</p>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div class="fw-semibold">Submission ID: {{ submission.submission_id }}</div>
+        <div class="text-muted small">Created: {{ submission.created_at|date:"Y-m-d H:i" }}</div>
+        <div class="text-muted small">Status: {{ submission.status }}</div>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="{% url 'superadmin:customer_job_checks' %}">Back</a>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Customer</h5>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="fw-semibold">Name</div>
+        <div class="text-muted">{{ submission.customer_name|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Customer ID</div>
+        <div class="text-muted">{{ submission.customer_id|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Email</div>
+        <div class="text-muted">{{ submission.user.email|default:'' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Service</div>
+        <div class="text-muted">{{ submission.service }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Instruction</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.instruction|default:"No instructions provided." }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Attachment</h5>
+    {% if submission.attachment %}
+      <a href="{{ submission.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">Download / View</a>
+    {% else %}
+      <div class="text-muted">No attachment uploaded.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">AI Prompt (debug)</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.ai_prompt|default:"N/A" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Extracted / Parsed Text</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.extracted_text|default:"N/A" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">AI-Generated Summary</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.ai_summary|default:"N/A" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Error (if any)</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.error_message|default:"None" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Meta</h5>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="fw-semibold">Job Reference</div>
+        <div class="text-muted">{{ submission.job_reference|default:"N/A" }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Coins Spent</div>
+        <div class="text-muted">{{ submission.coins_spent }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Updated</div>
+        <div class="text-muted">{{ submission.updated_at|date:"Y-m-d H:i" }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

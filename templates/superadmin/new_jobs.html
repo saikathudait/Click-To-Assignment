@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}New Jobs - SuperAdmin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4"><i class="fas fa-file-alt"></i> New Jobs</h2>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card stat-card superadmin-card">
+                <div class="card-body">
+                    <h5 class="card-title">Total New Jobs</h5>
+                    <p class="card-text display-4">{{ total_new_jobs }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card stat-card superadmin-card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Amount</h5>
+                    <p class="card-text display-4">₹{{ total_amount|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter/Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <input type="text" name="search" value="{{ filter_params.search }}" class="form-control" placeholder="Job ID, topic, etc.">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        {% for value,label in status_choices %}
+                            <option value="{{ value }}" {% if filter_params.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Sub Category</label>
+                    <input type="text" name="subcategory" value="{{ filter_params.subcategory }}" class="form-control" placeholder="Sub category keywords">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date Field</label>
+                    <select name="date_field" class="form-select">
+                        <option value="expected" {% if filter_params.date_field == 'expected' %}selected{% endif %}>Expected Deadline</option>
+                        <option value="strict" {% if filter_params.date_field == 'strict' %}selected{% endif %}>Strict Deadline</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="date_from" value="{{ filter_params.date_from }}" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="date_to" value="{{ filter_params.date_to }}" class="form-control">
+                </div>
+                <div class="col-md-3 d-flex gap-2 align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                    <a href="{% url 'superadmin:new_jobs' %}" class="btn btn-secondary w-100">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Jobs Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>SL NO</th>
+                            <th>Job ID</th>
+                            <th>System ID</th>
+                            <th>Amount</th>
+                            <th>Expected Deadline</th>
+                            <th>Strict Deadline</th>
+                            <th>View Job</th>
+                            <th>Job Summary</th>
+                            <th>Job Structure</th>
+                            <th>Content</th>
+                            <th>Referencing</th>
+                            <th>Plag Report</th>
+                            <th>AI Report</th>
+                            <th>Full Content</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in jobs_with_status %}
+                        <tr>
+                            <td>{{ item.job.sl_no }}</td>
+                            <td>{{ item.job.job_id }}</td>
+                            <td>{{ item.job.system_id }}</td>
+                            <td>₹{{ item.job.amount|floatformat:2 }}</td>
+                            <td>{{ item.job.expected_deadline|date:"M d, Y H:i" }}</td>
+                            <td>{{ item.job.strict_deadline|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'superadmin:job_detail' item.job.job_id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                            
+                            <!-- Job Summary -->
+                            <td class="ai-action-buttons">
+                                {% if item.has_summary %}
+                                    {% if item.summary_approved %}
+                                        <span class="badge bg-success">✓ Approved</span><br>
+                                    {% endif %}
+                                    <a href="{% url 'ai_pipeline:ai_content_view' item.job.job_id 'summary' %}" class="btn btn-sm btn-primary mt-1">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Not generated</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Job Structure -->
+                            <td class="ai-action-buttons">
+                                {% if item.has_structure %}
+                                    {% if item.structure_approved %}
+                                        <span class="badge bg-success">✓ Approved</span><br>
+                                    {% endif %}
+                                    <a href="{% url 'ai_pipeline:ai_content_view' item.job.job_id 'structure' %}" class="btn btn-sm btn-primary mt-1">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Not generated</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Content -->
+                            <td class="ai-action-buttons">
+                                {% if item.has_content %}
+                                    {% if item.content_approved %}
+                                        <span class="badge bg-success">✓ Approved</span><br>
+                                    {% endif %}
+                                    <a href="{% url 'ai_pipeline:ai_content_view' item.job.job_id 'content' %}" class="btn btn-sm btn-primary mt-1">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Not generated</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- References -->
+                            <td class="ai-action-buttons">
+                                {% if item.has_references %}
+                                    {% if item.references_approved %}
+                                        <span class="badge bg-success">✓ Approved</span><br>
+                                    {% endif %}
+                                    <a href="{% url 'ai_pipeline:ai_content_view' item.job.job_id 'references' %}" class="btn btn-sm btn-primary mt-1">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Not generated</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Plagiarism Report -->
+                            <td class="ai-action-buttons">
+                                {% if item.has_plagiarism %}
+                                    {% if item.plagiarism_approved %}
+                                        <span class="badge bg-success">✓ Approved</span><br>
+                                    {% endif %}
+                                    <a href="{% url 'ai_pipeline:ai_content_view' item.job.job_id 'plagiarism' %}" class="btn btn-sm btn-primary mt-1">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Not generated</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- AI Report -->
+                            <td class="ai-action-buttons">
+                                {% if item.has_ai_report %}
+                                    {% if item.ai_report_approved %}
+                                        <span class="badge bg-success">✓ Approved</span><br>
+                                    {% endif %}
+                                    <a href="{% url 'ai_pipeline:ai_content_view' item.job.job_id 'ai_report' %}" class="btn btn-sm btn-primary mt-1">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Not generated</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Full Content -->
+                            <td class="ai-action-buttons">
+                                {% if item.has_full_content %}
+                                    {% if item.full_content_approved %}
+                                        <span class="badge bg-success">✓ Approved</span><br>
+                                    {% endif %}
+                                    <a href="{% url 'ai_pipeline:ai_content_view' item.job.job_id 'full_content' %}" class="btn btn-sm btn-primary mt-1">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Not generated</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-2">
+                                    {% if item.has_full_content %}
+                                        {% if item.full_content_approved %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% else %}
+                                            <a href="{% url 'ai_pipeline:ai_content_approve' item.job.job_id 'full_content' %}"
+                                               class="btn btn-sm btn-success"
+                                               onclick="return confirm('Approve final content for {{ item.job.job_id }}?');">
+                                                <i class="fas fa-check me-1"></i> Approve
+                                            </a>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted small">Awaiting full content</span>
+                                    {% endif %}
+                                    <a href="{% url 'jobs:edit_job' item.job.id %}" class="btn btn-sm btn-outline-primary" title="Edit Job">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="14" class="text-center">No new jobs found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+        </div>
+        <div class="card-body">
+            <p>Use the Generate All button to automatically generate all content types in sequence for a job.</p>
+            <p class="text-muted">Generation actions are disabled on this screen; use backend or marketing tools if needed.</p>
+        </div>
+    </div>
+</div>
+</div>
+{% include 'includes/pagination.html' with page_obj=page_obj pagination_base=pagination_base page_param='page' %}
+
+<div class="card mt-4">
+    <div class="card-header bg-secondary text-white">
+        <h5><i class="fas fa-archive"></i> Deleted Jobs</h5>
+    </div>
+    <div class="card-body">
+        {% if deleted_jobs %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>SL NO</th>
+                        <th>Marketing Team</th>
+                        <th>Job ID</th>
+                        <th>System ID</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                        <th>Expected Deadline</th>
+                        <th>Strict Deadline</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in deleted_jobs %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            {% if job.created_by %}
+                                {{ job.created_by.get_full_name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ job.job_id }}</td>
+                        <td>{{ job.system_id }}</td>
+                        <td>₹{{ job.amount|floatformat:2 }}</td>
+                        <td>{{ job.get_status_display }}</td>
+                        <td>
+                            {% if job.created_by %}
+                                {{ job.created_by.email }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ job.expected_deadline|date:"M d, Y H:i" }}</td>
+                        <td>{{ job.strict_deadline|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <form method="post" action="{% url 'jobs:restore_job' job.id %}" onsubmit="return confirm('Restore this job?');">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-success" title="Restore Job">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No deleted jobs.</p>
+        {% endif %}
+    </div>
+</div>
+{% include 'includes/pagination.html' with page_obj=deleted_page_obj pagination_base=deleted_pagination_base page_param='deleted_page' %}
+
+<div class="text-end mt-3">
+    <a href="{% url 'superadmin:rework_list' %}" class="btn btn-warning">
+        <i class="fas fa-undo"></i> Reworks
+    </a>
+</div>
+
+<!-- Loading Spinner -->
+<div id="loadingSpinner" class="spinner-overlay" style="display: none;">
+    <div class="spinner-border text-light" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<script>
+// Show loading spinner on generate/regenerate clicks
+document.querySelectorAll('a[href*="regenerate"], a[href*="generate_all"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        if (confirm(this.getAttribute('onclick') ? '' : 'Generate content?')) {
+            document.getElementById('loadingSpinner').style.display = 'flex';
+        }
+    });
+});
+</script>
+{% endblock %}

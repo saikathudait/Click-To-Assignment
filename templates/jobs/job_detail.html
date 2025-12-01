@@ -1,0 +1,107 @@
+<!-- templates/jobs/job_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}Job Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-info-circle"></i> Job Details</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Job ID:</strong>
+                        <p class="text-muted">{{ job.job_id }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>System ID:</strong>
+                        <p class="text-muted">{{ job.system_id }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Amount:</strong>
+                        <p class="text-muted">₹{{ job.amount }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Status:</strong>
+                        <p>
+                            <span class="badge bg-{{ job.status|lower }}"
+                            style="background-color:#ffe08a !important; color:#000000 !important;">
+                                {{ job.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Expected Deadline:</strong>
+                        <p class="text-muted">{{ job.expected_deadline|date:"F d, Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Strict Deadline:</strong>
+                        <p class="text-muted">{{ job.strict_deadline|date:"F d, Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Created By:</strong>
+                    <p class="text-muted">{{ job.created_by.get_full_name }} ({{ job.created_by.email }})</p>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Created At:</strong>
+                    <p class="text-muted">{{ job.created_at|date:"F d, Y H:i:s" }}</p>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <strong>Instructions:</strong>
+                    <div class="border p-3 bg-light">
+                        <pre style="white-space: pre-wrap;">{{ job.instruction }}</pre>
+                    </div>
+                </div>
+                
+                {% if attachments %}
+                <div class="mb-3">
+                    <strong>Attachments:</strong>
+                    <ul class="list-group">
+                        {% for attachment in attachments %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-file"></i> {{ attachment.filename }}
+                                <small class="text-muted">({{ attachment.file_size|filesizeformat }})</small>
+                            </div>
+                            <a href="{{ attachment.file.url }}" target="_blank" class="btn btn-sm btn-primary">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="d-grid gap-2">
+                    {% if user.role == 'SUPERADMIN' %}
+                        <a href="{% url 'superadmin:all_jobs' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to All Jobs
+                        </a>
+                    {% else %}
+                        <a href="{% url 'marketing:all_projects' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to All Projects
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

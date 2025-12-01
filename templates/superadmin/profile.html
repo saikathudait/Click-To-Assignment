@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - SuperAdmin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-user-shield"></i> SuperAdmin Profile</h4>
+            </div>
+            <div class="card-body">
+                {% if request.method == 'GET' %}
+                    <!-- Profile Picture -->
+                    <div class="d-flex align-items-center mb-4 gap-4">
+                        <div class="text-center">
+                            {% with avatar=profile_image_url|default_if_none:'' %}
+                            <img
+                                src="{% if avatar %}{{ avatar }}{% else %}{% static 'img/default-avatar.svg' %}{% endif %}"
+                                alt="Profile Picture"
+                                class="rounded-circle shadow-sm"
+                                style="width: 140px; height: 140px; object-fit: cover; border: 3px solid #e9ecef;"
+                                onerror="this.src='{% static 'img/default-avatar.svg' %}'"
+                            >
+                            {% endwith %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold" style="font-size: 45px; line-height: 1.1;">{{ user.get_full_name }}</div>
+                            <div class="text-muted">{{ user.email }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Employee ID:</strong>
+                            <p class="text-muted">{{ user.employee_id }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Role:</strong>
+                            <p class="text-muted">
+                                <span class="badge bg-success">{{ user.get_role_display }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>First Name:</strong>
+                            <p class="text-muted">{{ user.first_name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Name:</strong>
+                            <p class="text-muted">{{ user.last_name }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Email:</strong>
+                            <p class="text-muted">{{ user.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>WhatsApp:</strong>
+                            <p class="text-muted">{{ user.whatsapp_country_code }} {{ user.whatsapp_no }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Last Qualification:</strong>
+                        <p class="text-muted">{{ user.last_qualification }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Member Since:</strong>
+                        <p class="text-muted">{{ user.date_joined|date:"F d, Y" }}</p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Note:</strong> SuperAdmin can edit profile details directly. For Email and WhatsApp changes, notes are mandatory.
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-warning" onclick="showEditForm()">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                        
+                        <a href="{% url 'profiles:change_password' %}" class="btn btn-secondary">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        
+                        <a href="{% url 'superadmin:dashboard' %}" class="btn btn-dark">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                {% endif %}
+                
+                <!-- Edit Form (Hidden by default) -->
+                <div id="editForm" style="display: none;">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Profile Picture</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <img
+                                    src="{% if profile_image_url %}{{ profile_image_url }}{% else %}{% static 'img/default-avatar.svg' %}{% endif %}"
+                                    alt="Current avatar"
+                                    class="rounded-circle border"
+                                    style="width: 70px; height: 70px; object-fit: cover;"
+                                    onerror="this.src='{% static 'img/default-avatar.svg' %}'"
+                                >
+                                <input type="file" name="profile_picture" accept="image/*" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" name="first_name" class="form-control" 
+                                       value="{{ user.first_name }}" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" name="last_name" class="form-control" 
+                                       value="{{ user.last_name }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" 
+                                   value="{{ user.email }}" required>
+                            <small class="text-muted">Notes required for email changes</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">WhatsApp Number</label>
+                            <div class="input-group">
+                                <select name="whatsapp_country_code" class="form-select" style="max-width: 120px;">
+                                    <option value="+1" {% if user.whatsapp_country_code == '+1' %}selected{% endif %}>+1 (USA)</option>
+                                    <option value="+44" {% if user.whatsapp_country_code == '+44' %}selected{% endif %}>+44 (UK)</option>
+                                    <option value="+91" {% if user.whatsapp_country_code == '+91' %}selected{% endif %}>+91 (India)</option>
+                                    <option value="+61" {% if user.whatsapp_country_code == '+61' %}selected{% endif %}>+61 (Australia)</option>
+                                    <option value="+86" {% if user.whatsapp_country_code == '+86' %}selected{% endif %}>+86 (China)</option>
+                                    <option value="+81" {% if user.whatsapp_country_code == '+81' %}selected{% endif %}>+81 (Japan)</option>
+                                    <option value="+971" {% if user.whatsapp_country_code == '+971' %}selected{% endif %}>+971 (UAE)</option>
+                                </select>
+                                <input type="text" name="whatsapp_no" class="form-control" 
+                                       value="{{ user.whatsapp_no }}" 
+                                       placeholder="10 digit number" 
+                                       pattern="[0-9]{10}" 
+                                       required>
+                            </div>
+                            <small class="text-muted">Notes required for WhatsApp changes</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Last Qualification</label>
+                            <input type="text" name="last_qualification" class="form-control" 
+                                   value="{{ user.last_qualification }}" 
+                                   maxlength="100" 
+                                   required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Notes (Required for Email/WhatsApp changes)</label>
+                            <textarea name="notes" class="form-control" rows="3" 
+                                      placeholder="Enter reason for email or WhatsApp number change..."></textarea>
+                            <small class="text-danger">* Mandatory for Email and WhatsApp changes</small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="hideEditForm()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showEditForm() {
+    // Hide profile display
+    document.querySelectorAll('.card-body > .row, .card-body > .mb-3, .card-body > hr, .card-body > .alert, .card-body > .d-grid').forEach(el => {
+        if (el.id !== 'editForm') {
+            el.style.display = 'none';
+        }
+    });
+    
+    // Show edit form
+    document.getElementById('editForm').style.display = 'block';
+}
+
+function hideEditForm() {
+    // Show profile display
+    document.querySelectorAll('.card-body > .row, .card-body > .mb-3, .card-body > hr, .card-body > .alert, .card-body > .d-grid').forEach(el => {
+        el.style.display = '';
+    });
+    
+    // Hide edit form
+    document.getElementById('editForm').style.display = 'none';
+}
+
+// Validate notes for email/WhatsApp changes
+document.querySelector('form')?.addEventListener('submit', function(e) {
+    const originalEmail = '{{ user.email }}';
+    const originalWhatsApp = '{{ user.whatsapp_no }}';
+    const newEmail = document.querySelector('input[name="email"]').value;
+    const newWhatsApp = document.querySelector('input[name="whatsapp_no"]').value;
+    const notes = document.querySelector('textarea[name="notes"]').value.trim();
+    
+    if ((newEmail !== originalEmail || newWhatsApp !== originalWhatsApp) && !notes) {
+        e.preventDefault();
+        alert('Notes are required when changing Email or WhatsApp number!');
+        document.querySelector('textarea[name="notes"]').focus();
+        return false;
+    }
+});
+</script>
+{% endblock %}

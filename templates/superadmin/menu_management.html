@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load menu_tags %}
+
+{% block title %}Menu Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4"><i class="fas fa-list"></i> Menu Management</h2>
+    <p class="text-muted">Welcome is fixed at position 0 for every role. Adjust the order of other menu items as needed.</p>
+
+    {% for role, role_label in roles %}
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-users-cog me-2"></i>{{ role_label }}</span>
+            <small>Drag positions via number inputs; lower numbers show higher in the sidebar.</small>
+        </div>
+        <div class="card-body">
+            <form method="post" class="table-responsive">
+                {% csrf_token %}
+                <input type="hidden" name="role" value="{{ role }}">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 10%">Position</th>
+                            <th style="width: 30%">Label</th>
+                            <th style="width: 25%">URL Name</th>
+                            <th style="width: 20%">Icon</th>
+                            <th style="width: 15%">Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items_by_role|get_item:role %}
+                        <tr>
+                            <td>
+                                <input
+                                    type="number"
+                                    name="pos_{{ item.id }}"
+                                    value="{{ item.position }}"
+                                    class="form-control form-control-sm"
+                                    {% if item.is_fixed %}readonly{% endif %}
+                                    min="0"
+                                >
+                            </td>
+                            <td>
+                                {{ item.label }}
+                                {% if item.is_fixed %}
+                                    <span class="badge bg-secondary ms-2">Fixed</span>
+                                {% endif %}
+                            </td>
+                            <td><code>{{ item.url_name }}</code></td>
+                            <td><i class="{{ item.icon_class }}"></i> <small>{{ item.icon_class }}</small></td>
+                            <td class="text-center">
+                                <input
+                                    type="checkbox"
+                                    name="active_{{ item.id }}"
+                                    class="form-check-input"
+                                    value="1"
+                                    {% if item.is_active %}checked{% endif %}
+                                    {% if item.is_fixed %}disabled{% endif %}
+                                >
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted">No menu items found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="text-end">
+                    <button class="btn btn-primary"><i class="fas fa-save me-1"></i> Save {{ role_label }} Menu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

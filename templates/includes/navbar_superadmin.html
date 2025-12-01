@@ -1,0 +1,557 @@
+{# templates/includes/navbar_superadmin.html #}
+{% load menu_tags static %}
+<style>
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 260px;
+        background: #A4F4CF;
+        padding: 20px 0 140px; /* bottom padding ensures scroll space above fixed user section */
+        overflow-y: auto;
+        scrollbar-width: thin;
+        z-index: 1000;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+    }
+
+    .sidebar .brand {
+        padding: 32px 24px 30px;
+        text-align: center;
+        border-bottom: 2px solid rgba(0,0,0,0.1);
+        margin-bottom: 24px;
+        background: transparent;
+        border-radius: 0;
+    }
+
+    .sidebar .brand a {
+        color: #0f3d2a;
+        text-decoration: none;
+        font-size: 1.35rem;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        letter-spacing: 0.2px;
+    }
+
+    .sidebar .brand .logo-mark {
+        width: 100%;
+        max-width: 220px;
+        height: auto;
+        border-radius: 0;
+        background: none;
+        color: #0f3d2a;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: none;
+        font-size: 1.4rem;
+    }
+
+    .sidebar .brand .logo-text { display: none; }
+
+    .sidebar .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar .nav-item {
+        margin-bottom: 5px;
+    }
+
+    .sidebar .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 14px 20px;
+        color: #000000ff;
+        text-decoration: none;
+        transition: all 0.3s;
+        position: relative;
+        border-left: 3px solid transparent;
+        font-weight: 500;
+    }
+
+    .sidebar .nav-link:hover {
+        background: rgba(26, 95, 63, 0.1);
+        color: #0f4a2f;
+        border-left-color: #0f4a2f;
+        padding-left: 23px;
+    }
+
+    .sidebar .nav-link.active {
+        background: #0f4a2f;
+        color: #ffffff;
+        border-left-color: #ffc107;
+        font-weight: 600;
+    }
+
+    .sidebar .nav-link i {
+        width: 24px;
+        margin-right: 12px;
+        font-size: 1.1rem;
+    }
+
+    .sidebar .badge {
+        position: absolute;
+        right: 20px;
+        font-size: 0.75rem;
+    }
+
+    .sidebar .user-section {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 260px;
+        border-top: 2px solid rgba(0,0,0,0.1);
+        padding: 15px 20px;
+        background: #00eeffff;
+    }
+
+    .sidebar .user-dropdown {
+        color: #000000ff;
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 5px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 500;
+    }
+
+    .sidebar .user-dropdown:hover {
+        background: rgba(26, 95, 63, 0.1);
+        color: #0f4a2f;
+    }
+
+    .sidebar .user-dropdown i.fa-user-shield {
+        margin-right: 10px;
+    }
+
+    .sidebar .dropdown-menu {
+        position: relative !important;
+        transform: none !important;
+        margin-top: 10px;
+        width: 100%;
+        background: #ffffff;
+        border: 1px solid rgba(26, 95, 63, 0.2);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .sidebar .dropdown-menu .dropdown-item {
+        color: #1a5f3f;
+        padding: 10px 15px;
+    }
+
+    .sidebar .dropdown-menu .dropdown-item:hover {
+        background: #A4F4CF;
+        color: #0f4a2f;
+    }
+
+    .sidebar .dropdown-menu .dropdown-divider {
+        border-color: rgba(26, 95, 63, 0.2);
+    }
+
+    .mobile-toggle {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: #0f4a2f;
+        color: #fff;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 0;
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+        }
+
+        .sidebar.show {
+            width: 260px;
+            transform: translateX(0);
+        }
+
+        .sidebar .user-section {
+            width: 260px;
+        }
+
+        .mobile-toggle {
+            display: block !important;
+        }
+    }
+
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: rgba(26, 95, 63, 0.1);
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(26, 95, 63, 0.3);
+        border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(26, 95, 63, 0.5);
+    }
+    .nav-sub {
+        background: rgba(26,95,63,0.05);
+        padding: 6px 0 6px 12px;
+        border-left: 3px solid #0f4a2f;
+        display: block;
+    }
+    .nav-sub.collapsed { display: none; }
+    .nav-sub .nav-link {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+    .nav-link.nav-parent {
+        font-weight: 700;
+        background: #0f4a2f;
+        color: #ffffff;
+        cursor: pointer;
+    }
+</style>
+
+<!-- Mobile Toggle Button -->
+<button class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="brand">
+            <a href="{% url 'superadmin:dashboard' %}">
+                <span class="logo-mark p-0" style="background:none; box-shadow:none;">
+                    <img src="{% static 'img/logo.png' %}" alt="Logo" style="width: 100%; max-width: 220px; height: auto; object-fit: contain;">
+                </span>
+            </a>
+        </div>
+
+    {% role_menu 'SUPERADMIN' as superadmin_menu %}
+    {% if superadmin_menu %}
+        {% with customer_urls='superadmin:customer_management,superadmin:customer_accounts,superadmin:customer_wallets,superadmin:customer_pricing,superadmin:customer_ai_config,superadmin:customer_ai_logs,superadmin:customer_job_checks,superadmin:customer_structures,superadmin:customer_contents,superadmin:customer_tickets,superadmin:customer_meetings,superadmin:customer_bookings,superadmin:customer_analytics' %}
+        <ul class="nav-menu">
+            {% for item in superadmin_menu %}
+                {% url item.url_name as item_url %}
+                {% if item_url %}
+                    {% if item.url_name in customer_urls %}
+                    {% elif item.url_name == 'superadmin:form_management' and user.role != 'SUPERADMIN' and not role_permissions.manage_forms %}
+                    {% elif item.url_name == 'superadmin:permission_management' and user.role != 'SUPERADMIN' and not role_permissions.manage_permissions %}
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == item_url %}active{% endif %}" href="{{ item_url }}">
+                                <i class="{{ item.icon_class }}"></i>
+                                <span>{{ item.label }}</span>
+                                {% if item.url_name == 'superadmin:new_jobs' and pending_jobs > 0 %}
+                                    <span class="badge bg-danger">{{ pending_jobs }}</span>
+                                {% endif %}
+                                {% if item.url_name == 'tickets:superadmin-ticket-list' and pending_tickets > 0 %}
+                                    <span class="badge bg-danger">{{ pending_tickets }}</span>
+                                {% endif %}
+                                {% if item.url_name == 'approvals:user_approval_list' and pending_users > 0 %}
+                                    <span class="badge bg-warning text-dark">{{ pending_users }}</span>
+                                {% endif %}
+                                {% if item.url_name == 'approvals:profile_update_list' and pending_profile_updates > 0 %}
+                                    <span class="badge bg-info text-dark">{{ pending_profile_updates }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:google_login_settings' %}">
+                    <i class="fab fa-google text-danger"></i><span>Google Login</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link nav-parent d-flex align-items-center" id="customerNavParent">
+                    <i class="fas fa-user-tie"></i><span>Customer Management System</span>
+                    <i class="fas fa-chevron-down ms-auto" id="customerNavChevron" style="font-size:12px;"></i>
+                </div>
+                <div class="nav-sub" id="customerNavSub">
+                    <a class="nav-link" href="{% url 'superadmin:customer_accounts' %}">
+                        <i class="fas fa-id-card"></i><span>Customer Account Management</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_wallets' %}">
+                        <i class="fas fa-wallet"></i><span>Coin / Wallet Management</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_pricing' %}">
+                        <i class="fas fa-tags"></i><span>Pricing Plan Management</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_ai_config' %}">
+                        <i class="fas fa-microchip"></i><span>AI Service Configuration</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_ai_logs' %}">
+                        <i class="fas fa-clipboard-list"></i><span>AI Request Log</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_job_checks' %}">
+                        <i class="fas fa-file-alt"></i><span>Job Checking Submissions</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_structures' %}">
+                        <i class="fas fa-sitemap"></i><span>Structure Generation</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_contents' %}">
+                        <i class="fas fa-file-signature"></i><span>Content Generation</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_tickets' %}">
+                        <i class="fas fa-ticket-alt"></i><span>Customer Tickets</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_meetings' %}">
+                        <i class="fas fa-handshake"></i><span>Meeting Management</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_bookings' %}">
+                        <i class="fas fa-calendar-check"></i><span>Booking Management</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_analytics' %}">
+                        <i class="fas fa-chart-pie"></i><span>Customer Analytics</span>
+                    </a>
+                </div>
+            </li>
+        </ul>
+        {% endwith %}
+    {% else %}
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:welcome' %}">
+                    <i class="fas fa-home"></i><span>Welcome</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:dashboard' %}">
+                    <i class="fas fa-chart-bar"></i><span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:statistics' %}">
+                    <i class="fas fa-chart-pie"></i><span>Statistics</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:all_jobs' %}">
+                    <i class="fas fa-briefcase"></i><span>All Jobs</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:new_jobs' %}">
+                    <i class="fas fa-bell"></i><span>New Jobs</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'tickets:superadmin-ticket-list' %}">
+                    <i class="fas fa-ticket-alt"></i><span>Tickets</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'holidays:list' %}">
+                    <i class="fas fa-umbrella-beach"></i><span>Holiday Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:user_management' %}">
+                    <i class="fas fa-users-cog"></i><span>User Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:form_management' %}">
+                    <i class="fas fa-clipboard-list"></i><span>Form Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:permission_management' %}">
+                    <i class="fas fa-user-shield"></i><span>Permission Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:announcement_list' %}">
+                    <i class="fas fa-bullhorn"></i><span>Notice Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:menu_management' %}">
+                    <i class="fas fa-list"></i><span>Menu Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:google_login_settings' %}">
+                    <i class="fab fa-google text-danger"></i><span>Google Login</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:content_management' %}">
+                    <i class="fas fa-lock-open"></i><span>Content Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:settings' %}">
+                    <i class="fas fa-sliders-h"></i><span>Settings</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:activity_tracking' %}">
+                    <i class="fas fa-stream"></i><span>Activity Tracking</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:activity_analytics' %}">
+                    <i class="fas fa-chart-line"></i><span>User Time-on-Page</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:error_management' %}">
+                    <i class="fas fa-bug"></i><span>Error Management</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'superadmin:backup_center' %}">
+                    <i class="fas fa-database"></i><span>Backup</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'approvals:user_approval_list' %}">
+                    <i class="fas fa-user-check"></i><span>User Approval</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'approvals:profile_update_list' %}">
+                    <i class="fas fa-edit"></i><span>Profile Updates</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link nav-parent d-flex align-items-center">
+                    <i class="fas fa-user-tie"></i><span>Customer Management System</span>
+                </div>
+                <div class="nav-sub">
+                    <a class="nav-link" href="{% url 'superadmin:customer_accounts' %}">
+                        <i class="fas fa-id-card"></i><span>Customer Account Management</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_wallets' %}">
+                        <i class="fas fa-wallet"></i><span>Coin / Wallet Management</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_pricing' %}">
+                        <i class="fas fa-tags"></i><span>Pricing Plan Management</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_ai_config' %}">
+                        <i class="fas fa-microchip"></i><span>AI Service Configuration</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_ai_logs' %}">
+                        <i class="fas fa-clipboard-list"></i><span>AI Request Log</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_job_checks' %}">
+                        <i class="fas fa-file-alt"></i><span>Job Checking Submissions</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_structures' %}">
+                        <i class="fas fa-sitemap"></i><span>Structure Generation</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_contents' %}">
+                        <i class="fas fa-file-signature"></i><span>Content Generation</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_tickets' %}">
+                        <i class="fas fa-ticket-alt"></i><span>Customer Tickets</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_meetings' %}">
+                        <i class="fas fa-handshake"></i><span>Meeting Management</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_bookings' %}">
+                        <i class="fas fa-calendar-check"></i><span>Booking Management</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'superadmin:customer_analytics' %}">
+                        <i class="fas fa-chart-pie"></i><span>Customer Analytics</span>
+                    </a>
+                </div>
+            </li>
+        </ul>
+    {% endif %}
+
+    <div class="user-section">
+        <div class="user-dropdown" data-bs-toggle="dropdown">
+            <div>
+                <i class="fas fa-user-shield"></i>
+                <span>{{ user.get_full_name }}</span>
+            </div>
+            <i class="fas fa-chevron-up"></i>
+        </div>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item" href="{% url 'superadmin:profile' %}">
+                    <i class="fas fa-id-card"></i> Profile
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item" href="{% url 'accounts:logout' %}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('show');
+    }
+
+    // Set active menu item based on current URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+
+        // Customer menu toggle
+        const parent = document.getElementById('customerNavParent');
+        const sub = document.getElementById('customerNavSub');
+        const chevron = document.getElementById('customerNavChevron');
+        function setChevron(open) {
+            if (!chevron) return;
+            chevron.classList.remove('fa-chevron-down','fa-chevron-up');
+            chevron.classList.add(open ? 'fa-chevron-up' : 'fa-chevron-down');
+        }
+        if (parent && sub) {
+            // Auto-open if a child is active
+            const subLinks = Array.from(sub.querySelectorAll('.nav-link'));
+            const hasActiveChild = subLinks.some(link => link.classList.contains('active'));
+            const startOpen = hasActiveChild;
+            sub.classList.toggle('collapsed', !startOpen);
+            setChevron(startOpen);
+            parent.addEventListener('click', (e) => {
+                e.preventDefault();
+                const isOpen = !sub.classList.contains('collapsed');
+                sub.classList.toggle('collapsed', isOpen);
+                setChevron(!isOpen);
+            });
+        }
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.querySelector('.mobile-toggle');
+        
+        if (window.innerWidth <= 768 && 
+            !sidebar.contains(event.target) && 
+            !toggle.contains(event.target) &&
+            sidebar.classList.contains('show')) {
+            sidebar.classList.remove('show');
+        }
+    });
+</script>

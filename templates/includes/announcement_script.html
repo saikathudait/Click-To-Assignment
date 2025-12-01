@@ -1,0 +1,40 @@
+<script>
+    (function() {
+        const board = document.getElementById('noticeBoard');
+        if (!board) {
+            return;
+        }
+        board.addEventListener('click', function(event) {
+            const dismissButton = event.target.closest('.notice-dismiss');
+            if (!dismissButton) {
+                return;
+            }
+            const url = dismissButton.getAttribute('data-dismiss-url');
+            if (!url) {
+                return;
+            }
+            dismissButton.disabled = true;
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': typeof getCSRFToken === 'function' ? getCSRFToken() : '',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Dismiss failed');
+                }
+                return response.json();
+            })
+            .then(() => {
+                const card = dismissButton.closest('[data-announcement-card]');
+                if (card) {
+                    card.remove();
+                }
+            })
+            .catch(() => {
+                dismissButton.disabled = false;
+            });
+        });
+    })();
+</script>

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Announcement{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+    <div>
+        <h1 class="h3 mb-2">
+            <i class="fas fa-edit"></i> Edit Announcement
+        </h1>
+        <p class="text-muted mb-0">
+            Update the content, visibility, or schedule for <strong>{{ announcement.title }}</strong>.
+        </p>
+    </div>
+    <a href="{% url 'superadmin:announcement_list' %}" class="btn btn-outline-secondary mt-3 mt-md-0">
+        <i class="fas fa-arrow-left"></i> Back to Notice Management
+    </a>
+    </div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div class="row g-4">
+                <div class="col-md-8">
+                    {% for field in form %}
+                        {% if field.name != 'attachment' and field.name != 'remove_attachment' and field.name != 'link_url' %}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <small class="text-muted d-block">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in field.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded h-100">
+                        <h6 class="fw-semibold mb-3">Attachments & Links</h6>
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.attachment.id_for_label }}">Attachment</label>
+                            {{ form.attachment }}
+                            {% if announcement.attachment %}
+                                <div class="mt-2">
+                                    <a href="{{ announcement.attachment.url }}" target="_blank">
+                                        <i class="fas fa-paperclip"></i> Current file
+                                    </a>
+                                </div>
+                            {% endif %}
+                            {% if form.attachment.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.attachment.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.link_url.id_for_label }}">Optional link</label>
+                            {{ form.link_url }}
+                            {% if form.link_url.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.link_url.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-check mb-3">
+                            {{ form.remove_attachment }}
+                            <label class="form-check-label" for="{{ form.remove_attachment.id_for_label }}">
+                                {{ form.remove_attachment.label }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <a href="{% url 'superadmin:announcement_list' %}" class="btn btn-light">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

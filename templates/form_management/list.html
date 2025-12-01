@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Form Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-row .card {
+        flex: 1 1 calc(33% - 1rem);
+        min-width: 220px;
+        cursor: pointer;
+    }
+    .stats-card {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.35rem 0.8rem rgba(0,0,0,0.15);
+    }
+    .stats-card.active {
+        border: 2px solid #0d6efd;
+    }
+    .pagination-lite button,
+    .pagination-lite a {
+        min-width: 42px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Form Management</h2>
+            <p class="text-muted mb-0">Control who can see forms, their order, and active status.</p>
+        </div>
+    </div>
+
+    <div class="stats-row d-flex flex-wrap gap-3 mb-4">
+        <a href="{{ card_urls.total }}" class="card stats-card shadow-sm {% if card_active.total %}active{% endif %}">
+            <div class="card-body">
+                <p class="text-muted mb-1">Total Forms</p>
+                <div class="h3 mb-0 text-primary">{{ stats.total }}</div>
+            </div>
+        </a>
+        <a href="{{ card_urls.active }}" class="card stats-card shadow-sm {% if card_active.active %}active{% endif %}">
+            <div class="card-body">
+                <p class="text-muted mb-1">Active Forms</p>
+                <div class="h3 mb-0 text-success">{{ stats.active }}</div>
+            </div>
+        </a>
+        <a href="{{ card_urls.inactive }}" class="card stats-card shadow-sm {% if card_active.inactive %}active{% endif %}">
+            <div class="card-body">
+                <p class="text-muted mb-1">Inactive Forms</p>
+                <div class="h3 mb-0 text-warning">{{ stats.inactive }}</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <strong><i class="fas fa-table me-2"></i>Forms</strong>
+            <span>Total: {{ page_obj.paginator.count }}</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>SL No</th>
+                            <th>Form Name</th>
+                            <th>Description</th>
+                            <th>Edit</th>
+                            <th>Active</th>
+                            <th>Inactive</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in page_obj.object_list %}
+                        <tr>
+                            <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                            <td>
+                                <strong>{{ form.name }}</strong><br>
+                                <small class="text-muted">{{ form.slug }}</small>
+                            </td>
+                            <td>{{ form.description|default:'—' }}</td>
+                            <td>
+                                <a href="{% url 'superadmin:form_management_edit' form.slug %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <form method="post" action="{% url 'superadmin:form_management_toggle' form.slug %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="state" value="active">
+                                    <button class="btn btn-sm {% if form.is_active %}btn-success{% else %}btn-outline-success{% endif %}" {% if form.is_active %}disabled{% endif %}>
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            <td>
+                                <form method="post" action="{% url 'superadmin:form_management_toggle' form.slug %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="state" value="inactive">
+                                    <button class="btn btn-sm {% if not form.is_active %}btn-danger{% else %}btn-outline-danger{% endif %}" {% if not form.is_active %}disabled{% endif %}>
+                                        <i class="fas fa-times-circle"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No forms found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3 border-top bg-light">
+            <div class="text-muted">
+                Total Count: {{ page_obj.paginator.count }} | {{ per_page }} Records Per Page
+            </div>
+            <div class="d-flex align-items-center gap-2 pagination-lite">
+                {% if page_obj.number > 1 %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page=1"><i class="fas fa-angle-double-left"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.previous_page_number }}"><i class="fas fa-angle-left"></i></a>
+                {% else %}
+                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-double-left"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-left"></i></button>
+                {% endif %}
+                <span class="fw-semibold">{{ page_obj.start_index }}-{{ page_obj.end_index }}</span>
+                {% if page_obj.has_next %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.next_page_number }}"><i class="fas fa-angle-right"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.paginator.num_pages }}"><i class="fas fa-angle-double-right"></i></a>
+                {% else %}
+                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-right"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-double-right"></i></button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

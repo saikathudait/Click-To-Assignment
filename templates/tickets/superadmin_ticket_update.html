@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{# templates/superadmin/dashboard.html #}
+
+{% block title %}Dashboard - SuperAdmin{% endblock %}
+{% block content %}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Ticket Details (Read Only)</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Job ID:</strong> {{ object.job_id }}</p>
+                    <p><strong>Title:</strong> {{ object.title }}</p>
+                    <p><strong>Description:</strong><br>{{ object.description|linebreaks }}</p>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Topic:</strong> {{ object.topic }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Word Count:</strong> {{ object.word_count }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Referencing Style:</strong> {{ object.referencing_style }}</p>
+                        </div>
+                    </div>
+
+                    <p><strong>Created By:</strong>
+                        {% if object.created_by %}
+                            {{ object.created_by.username }}
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </p>
+
+                    <p><strong>Question File:</strong>
+                        {% if object.question_file %}
+                            <a href="{{ object.question_file.url }}" target="_blank">Download</a>
+                        {% else %}
+                            <span class="text-muted">No file</span>
+                        {% endif %}
+                    </p>
+
+                    <p><strong>Marketing Notes:</strong><br>
+                        {{ object.marketing_notes|default:"—"|linebreaks }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">SuperAdmin Action</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Priority</label>
+                                {{ form.priority }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status</label>
+                                {{ form.status }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Final File (Upload Completed Work)</label>
+                            {{ form.final_file }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Super Admin Notes</label>
+                            {{ form.superadmin_notes }}
+                        </div>
+
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'tickets:superadmin-ticket-list' %}" class="btn btn-outline-secondary">
+                                ← Back to All Tickets
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+
+
+

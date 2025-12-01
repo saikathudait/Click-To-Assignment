@@ -1,0 +1,56 @@
+<!-- templates/accounts/login.html -->
+{% extends 'base.html' %}
+{% load socialaccount %}
+
+{% block title %}Login - Click to Assignment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </h2>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger">{{ form.username.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger">{{ form.password.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+
+                    <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger w-100 mb-3">
+                        <i class="fab fa-google"></i> Login with Google
+                    </a>
+                    
+                    <div class="text-center">
+                        <p>Don't have an account? 
+                            <a href="{% url 'accounts:signup' %}">Sign Up</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

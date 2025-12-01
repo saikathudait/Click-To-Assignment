@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block title %}Google Login Settings{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0"><i class="fab fa-google text-danger"></i> Google Login / Social Auth Management</h3>
+  </div>
+
+  {% if warnings %}
+    <div class="alert alert-warning">
+      {% for w in warnings %}
+        <div>{{ w }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="card mb-3">
+    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+      <span>Super Admin–Only Settings</span>
+      {% if not edit_mode %}
+        <a class="btn btn-sm btn-outline-primary" href="?edit=1">Edit</a>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      {% if edit_mode %}
+        <form method="post">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Google Login Enabled</label>
+              {{ form.enabled }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Allow Google Signup</label>
+              {{ form.allow_signup }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Mode</label>
+              {{ form.mode }}
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Allowed Domains (optional)</label>
+              {{ form.allowed_domains }}
+              <div class="form-text">Comma-separated. Leave blank to allow all.</div>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Redirect URL</label>
+              {{ form.redirect_url }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Client ID</label>
+              {{ form.client_id }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Client Secret</label>
+              {{ form.client_secret }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Allow Customers</label>
+              {{ form.allow_customer }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Allow Marketing</label>
+              {{ form.allow_marketing }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Allow Super Admin</label>
+              {{ form.allow_superadmin }}
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Show Health Warning Banner</label>
+              {{ form.show_health_warning }}
+            </div>
+          </div>
+          <button class="btn btn-primary mt-3" type="submit">Save Settings</button>
+        </form>
+      {% else %}
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="text-muted small">Google Login Enabled</div>
+            <div class="fw-semibold">{{ config.enabled }}</div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-muted small">Allow Google Signup</div>
+            <div class="fw-semibold">{{ config.allow_signup }}</div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-muted small">Mode</div>
+            <div class="fw-semibold">{{ config.get_mode_display }}</div>
+          </div>
+          <div class="col-md-12">
+            <div class="text-muted small">Allowed Domains</div>
+            <div class="fw-semibold">{{ config.allowed_domains|default:'(all)' }}</div>
+          </div>
+          <div class="col-md-12">
+            <div class="text-muted small">Redirect URL</div>
+            <div class="fw-semibold">{{ config.redirect_url|default:'-' }}</div>
+          </div>
+          <div class="col-md-6">
+            <div class="text-muted small">Client ID</div>
+            <div class="fw-semibold">{{ config.client_id|default:'-' }}</div>
+          </div>
+          <div class="col-md-6">
+            <div class="text-muted small">Client Secret</div>
+            <div class="fw-semibold">{{ masked_secret|default:'(not set)' }}</div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-muted small">Allow Customers</div>
+            <div class="fw-semibold">{{ config.allow_customer }}</div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-muted small">Allow Marketing</div>
+            <div class="fw-semibold">{{ config.allow_marketing }}</div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-muted small">Allow Super Admin</div>
+            <div class="fw-semibold">{{ config.allow_superadmin }}</div>
+          </div>
+          <div class="col-md-12">
+            <div class="text-muted small">Health Warning Banner</div>
+            <div class="fw-semibold">{{ config.show_health_warning }}</div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header fw-semibold">Linked Google Accounts</div>
+    <div class="card-body table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Email</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if linked_accounts %}
+            {% for acc in linked_accounts %}
+              <tr>
+                <td>{{ acc.id }}</td>
+                <td>{% if acc.user %}{{ acc.user.email }}{% else %}-{% endif %}</td>
+                <td>{{ acc.extra_data.email|default:acc.uid }}</td>
+                <td>
+                  <a class="btn btn-sm btn-outline-danger" href="{% url 'superadmin:google_login_unlink' acc.id %}" onclick="return confirm('Unlink this Google account?');">Unlink</a>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="4" class="text-center text-muted">No linked Google accounts.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header fw-semibold">Google Login Logs</div>
+    <div class="card-body table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Time</th>
+            <th>User</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Reason</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if logs %}
+            {% for log in logs %}
+              <tr>
+                <td>{{ log.created_at|date:"Y-m-d H:i" }}</td>
+                <td>{% if log.user %}{{ log.user.email }}{% else %}-{% endif %}</td>
+                <td>{{ log.email|default:'-' }}</td>
+                <td>
+                  {% if log.status == 'SUCCESS' %}
+                    <span class="badge bg-success">Success</span>
+                  {% else %}
+                    <span class="badge bg-danger">Failure</span>
+                  {% endif %}
+                </td>
+                <td>{{ log.reason|default:'-' }}</td>
+                <td>{{ log.ip_address|default:'-' }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="6" class="text-center text-muted">No logs yet.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

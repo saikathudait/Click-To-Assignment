@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Content Generation Submissions</h2>
+<p class="text-muted">Super Admin-only: review all content generation requests, versions, and AI outputs.</p>
+
+<div class="row g-3 mb-3">
+  {% for card in rule_cards %}
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">{{ card.label }}</div>
+        <div class="h4 mb-0">
+          {{ card.coins }} coins
+          {% if 'create content' in card.label|lower %}/ {{ content_word_block }} words{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Search (Topic / Submission ID / Email)</label>
+        <input type="text" class="form-control" name="search" value="{{ search }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status">
+          <option value="">All</option>
+          <option value="SUCCESS" {% if status_filter == 'SUCCESS' %}selected{% endif %}>Success</option>
+          <option value="FAILED" {% if status_filter == 'FAILED' %}selected{% endif %}>Failed</option>
+          <option value="PENDING" {% if status_filter == 'PENDING' %}selected{% endif %}>Pending</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date from</label>
+        <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date to</label>
+        <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Subject Field</label>
+        <input type="text" class="form-control" name="subject_field" value="{{ subject_filter }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Academic Level</label>
+        <input type="text" class="form-control" name="academic_level" value="{{ level_filter }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Min Word Count</label>
+        <input type="number" class="form-control" name="min_wc" value="{{ min_wc }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Max Word Count</label>
+        <input type="number" class="form-control" name="max_wc" value="{{ max_wc }}">
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-success" type="submit">Apply</button>
+        <a class="btn btn-outline-secondary" href="{% url 'superadmin:customer_contents' %}">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>SL No</th>
+          <th>Submission ID</th>
+          <th>Customer ID</th>
+          <th>Customer</th>
+          <th>Topic</th>
+          <th>Status</th>
+          <th>Coins</th>
+          <th>Versions</th>
+          <th>Word Count</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows %}
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.sl_no }}</td>
+            <td>{{ row.submission_id }}</td>
+            <td>{{ row.customer_id|default:'' }}</td>
+            <td>
+              <div class="fw-semibold">{{ row.customer_name|default:'N/A' }}</div>
+              <div class="text-muted small">{{ row.base_submission_id }}</div>
+            </td>
+            <td>{{ row.topic|default:'-' }}</td>
+            <td>{{ row.status }}</td>
+            <td>{{ row.coins_spent }}</td>
+            <td>{{ row.version_count }}</td>
+            <td>{{ row.word_count }}</td>
+            <td>{{ row.created_at|date:"Y-m-d H:i" }}</td>
+            <td><a class="btn btn-sm btn-outline-primary" href="{% url 'superadmin:customer_content_detail' row.submission_id %}">View</a></td>
+          </tr>
+          {% endfor %}
+        {% else %}
+        <tr>
+          <td colspan="11" class="text-center text-muted">No content submissions yet.</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-white">
+    {% if page_obj %}
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="text-muted small"><strong>Total:</strong> {{ page_obj.paginator.count }}</div>
+        <div class="text-muted small"><strong>{{ page_obj.paginator.per_page }}</strong> per page</div>
+        <div class="text-muted small">
+          {% if page_obj.paginator.count %}
+            Showing {{ page_obj.start_index }} - {{ page_obj.end_index }}
+          {% else %}
+            Showing 0 - 0
+          {% endif %}
+        </div>
+        <div class="btn-group">
+          {% if page_obj.has_previous %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page=1">&laquo;</a>
+            <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.previous_page_number }}">&lsaquo;</a>
+          {% else %}
+            <span class="btn btn-sm btn-outline-secondary disabled">&laquo;</span>
+            <span class="btn btn-sm btn-outline-secondary disabled">&lsaquo;</span>
+          {% endif %}
+          <span class="btn btn-sm btn-outline-primary disabled">
+            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+          </span>
+          {% if page_obj.has_next %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.next_page_number }}">&rsaquo;</a>
+            <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+          {% else %}
+            <span class="btn btn-sm btn-outline-secondary disabled">&rsaquo;</span>
+            <span class="btn btn-sm btn-outline-secondary disabled">&raquo;</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django migrations (keep package init if present)
+*/migrations/*
+!*/migrations/__init__.py
+
+# Uploaded media
+/media/
+
+# Environment
+.env

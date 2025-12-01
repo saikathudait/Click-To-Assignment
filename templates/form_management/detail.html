@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ form_obj.name }} - Form Builder{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0"><i class="fas fa-pen-square me-2"></i>{{ form_obj.name }}</h2>
+            <p class="text-muted mb-0">{{ form_obj.description|default:'Configure field visibility and ordering.' }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge {% if form_obj.is_active %}bg-success{% else %}bg-secondary{% endif %} align-self-center">
+                {% if form_obj.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+            <a href="{% url 'superadmin:form_management' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Forms
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="card shadow-sm">
+        {% csrf_token %}
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>SL No</th>
+                            <th>Field Name</th>
+                            <th>Data Type</th>
+                            <th>Order</th>
+                            <th>Visible (Roles)</th>
+                            <th>Required Roles</th>
+                            <th>Read Only</th>
+                            <th>Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for field in fields %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <strong>{{ field.label }}</strong><br>
+                                <small class="text-muted">{{ field.name }}</small>
+                            </td>
+                            <td style="min-width: 160px;">
+                                <select name="field_{{ field.id }}_type" class="form-select form-select-sm">
+                                    {% for value,label in field.FIELD_CHOICES %}
+                                        <option value="{{ value }}" {% if field.field_type == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td style="width: 100px;">
+                                <input type="number" name="field_{{ field.id }}_order" value="{{ field.order }}" class="form-control form-control-sm">
+                            </td>
+                            <td style="min-width: 160px;">
+                                {% for value,label in role_choices %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="field_{{ field.id }}_visible" value="{{ value }}" id="field{{ field.id }}visible{{ forloop.counter }}" {% if value in field.visible_roles_list %}checked{% endif %}>
+                                    <label class="form-check-label" for="field{{ field.id }}visible{{ forloop.counter }}">{{ label }}</label>
+                                </div>
+                                {% endfor %}
+                            </td>
+                            <td style="min-width: 160px;">
+                                {% for value,label in role_choices %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="field_{{ field.id }}_required" value="{{ value }}" id="field{{ field.id }}req{{ forloop.counter }}" {% if value in field.required_roles_list %}checked{% endif %}>
+                                    <label class="form-check-label" for="field{{ field.id }}req{{ forloop.counter }}">{{ label }}</label>
+                                </div>
+                                {% endfor %}
+                            </td>
+                            <td style="min-width: 160px;">
+                                {% for value,label in role_choices %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="field_{{ field.id }}_readonly" value="{{ value }}" id="field{{ field.id }}ro{{ forloop.counter }}" {% if value in field.readonly_roles_list %}checked{% endif %}>
+                                    <label class="form-check-label" for="field{{ field.id }}ro{{ forloop.counter }}">{{ label }}</label>
+                                </div>
+                                {% endfor %}
+                            </td>
+                            <td class="text-center">
+                                <div class="form-check form-switch d-inline-flex align-items-center">
+                                    <input class="form-check-input" type="checkbox" name="field_{{ field.id }}_active" {% if field.is_active %}checked{% endif %}>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer text-end">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i>Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

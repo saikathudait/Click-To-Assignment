@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Content Generation Submission</h2>
+<p class="text-muted">Full history for this request and its versions.</p>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body d-flex justify-content-between align-items-start">
+    <div>
+      <div class="fw-semibold">Submission ID: {{ submission.submission_id }}</div>
+      <div class="text-muted small">Base ID: {{ submission.base_submission_id }}</div>
+      <div class="text-muted small">Version: {{ submission.version_number }}</div>
+      <div class="text-muted small">Status: {{ submission.status }}</div>
+      <div class="text-muted small">Created: {{ submission.created_at|date:"Y-m-d H:i" }}</div>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'superadmin:customer_contents' %}">Back</a>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Customer</h5>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="fw-semibold">Name</div>
+        <div class="text-muted">{{ submission.customer_name|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Customer ID</div>
+        <div class="text-muted">{{ submission.customer_id|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Email</div>
+        <div class="text-muted">{{ submission.user.email|default:'' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Coins Spent</div>
+        <div class="text-muted">{{ submission.coins_spent }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Inputs</h5>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="fw-semibold">Topic</div>
+        <div class="text-muted">{{ submission.topic|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-3">
+        <div class="fw-semibold">Word Count</div>
+        <div class="text-muted">{{ submission.word_count }}</div>
+      </div>
+      <div class="col-md-3">
+        <div class="fw-semibold">Subject Field</div>
+        <div class="text-muted">{{ submission.subject_field|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Referencing Style</div>
+        <div class="text-muted">{{ submission.referencing_style|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Writing Style</div>
+        <div class="text-muted">{{ submission.writing_style|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Writing Tone</div>
+        <div class="text-muted">{{ submission.writing_tone|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Academic Level</div>
+        <div class="text-muted">{{ submission.academic_level|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Structure Guidelines</div>
+        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.structure_guidelines|default:"N/A" }}</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Generated Content (versions)</h5>
+    {% if versions %}
+      {% for version in versions %}
+        <div class="mb-3 p-3 border rounded bg-light">
+          <div class="d-flex justify-content-between">
+            <div><strong>Version {{ version.version_number }}</strong></div>
+            <div class="text-muted small">{{ version.created_at|date:"Y-m-d H:i" }}</div>
+          </div>
+          <pre class="mt-2" style="white-space: pre-wrap;">{{ version.generated_content|default:"N/A" }}</pre>
+          {% if version.references_text %}
+          <div class="mt-2">
+            <strong>References & Citations</strong>
+            <pre class="bg-white p-2 rounded" style="white-space: pre-wrap;">{{ version.references_text }}</pre>
+          </div>
+          {% endif %}
+          {% if version.final_content %}
+          <div class="mt-2">
+            <strong>Final Content (with citations)</strong>
+            <pre class="bg-white p-2 rounded" style="white-space: pre-wrap;">{{ version.final_content }}</pre>
+          </div>
+          {% endif %}
+          {% if version.error_message %}
+          <div class="mt-2 text-danger">
+            <strong>Error:</strong> {{ version.error_message }}
+          </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="text-muted">No versions available.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Error (if any)</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.error_message|default:"None" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Meta</h5>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="fw-semibold">Status</div>
+        <div class="text-muted">{{ submission.status }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Created</div>
+        <div class="text-muted">{{ submission.created_at|date:"Y-m-d H:i" }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Updated</div>
+        <div class="text-muted">{{ submission.updated_at|date:"Y-m-d H:i" }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

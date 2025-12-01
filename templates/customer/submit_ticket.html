@@ -1,0 +1,44 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-3">Submit Ticket</h2>
+<div class="card shadow-sm" style="background: {{ theme_color }};">
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Subject</label>
+        <input type="text" class="form-control" name="subject">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Category / Type</label>
+        <select class="form-select" name="category">
+          <option value="">Select category</option>
+          <option value="technical">Technical</option>
+          <option value="billing">Billing</option>
+          <option value="content_issue">Content Issue</option>
+          <option value="account">Account</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" rows="4" name="description"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Priority</label>
+        <select class="form-select" name="priority">
+          <option value="LOW">Low</option>
+          <option value="MEDIUM" selected>Medium</option>
+          <option value="HIGH">High</option>
+          <option value="CRITICAL">Critical</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Attachment (optional)</label>
+        <input type="file" class="form-control" name="attachment">
+      </div>
+      <button class="btn btn-primary" type="submit">Submit</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

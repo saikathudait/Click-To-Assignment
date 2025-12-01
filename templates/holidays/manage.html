@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Holiday Management{% endblock %}
+
+{% block content %}
+<div class="container my-4" id="holiday-management-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-umbrella-beach"></i> Holiday Management</h2>
+    </div>
+
+    <div class="row g-4 align-items-start">
+        {% if form %}
+        <div class="col-lg-5">
+            <div class="card shadow h-100">
+                <div class="card-header {% if editing_holiday %}bg-warning text-dark{% else %}bg-success text-white{% endif %}">
+                    <strong>
+                        <i class="fas {% if editing_holiday %}fa-edit{% else %}fa-plus-circle{% endif %}"></i>
+                        {% if editing_holiday %} Update Holiday {% else %} Add Holiday {% endif %}
+                    </strong>
+                </div>
+                <div class="card-body">
+                    {% if editing_holiday %}
+                        <div class="alert alert-warning py-2">
+                            Editing <strong>{{ editing_holiday.title }}</strong>.
+                            <a href="{% url 'holidays:list' %}" class="alert-link">Cancel editing</a>
+                        </div>
+                    {% endif %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Holiday Title</label>
+                            {{ form.title }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Holiday Type</label>
+                            {{ form.holiday_type }}
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label">Start Date</label>
+                                {{ form.start_date }}
+                            </div>
+                            <div class="col">
+                                <label class="form-label">End Date</label>
+                                {{ form.end_date }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Applies To</label>
+                            <div class="border rounded p-2">
+                                {{ form.applies_to }}
+                                <div class="form-text">{{ form.applies_to.help_text }}</div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            {{ form.notes }}
+                        </div>
+                        <button type="submit" class="btn {% if editing_holiday %}btn-warning text-dark{% else %}btn-success{% endif %} w-100">
+                            {% if editing_holiday %}Save Changes{% else %}Add Holiday{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <div class="col-lg-{% if form %}7{% else %}12{% endif %}">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <strong><i class="fas fa-calendar-check"></i> Upcoming Holidays</strong>
+                </div>
+                <div class="card-body">
+                    {% if holidays %}
+                        <div class="table-responsive">
+                            <table class="table table-striped align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Dates</th>
+                                        <th>Applies To</th>
+                                        <th>Status</th>
+                                        {% if request.user.role == 'SUPERADMIN' %}
+                                        <th class="text-end">Actions</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for holiday in holidays %}
+                                    <tr class="{% if not holiday.is_active %}table-secondary{% endif %}">
+                                        <td>
+                                            <strong>{{ holiday.title }}</strong><br>
+                                            <small class="text-muted">
+                                                {{ holiday.get_holiday_type_display }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            {{ holiday.start_date|date:"M d, Y" }}
+                                            {% if holiday.start_date != holiday.end_date %}
+                                                &ndash; {{ holiday.end_date|date:"M d, Y" }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% for team in holiday.applies_to_list %}
+                                                <span class="badge bg-info text-dark me-1">{{ team }}</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if holiday.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                                {% if holiday.is_active %}Active{% else %}Inactive{% endif %}
+                                            </span>
+                                        </td>
+                                        {% if request.user.role == 'SUPERADMIN' %}
+                                        <td class="text-end">
+                                            <div class="d-flex flex-wrap gap-2 justify-content-end">
+                                                <a href="{% url 'holidays:edit' holiday.pk %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <form method="post" action="{% url 'holidays:toggle' holiday.pk %}">
+                                                    {% csrf_token %}
+                                                    <button class="btn btn-sm {% if holiday.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                                                        {% if holiday.is_active %}
+                                                            <i class="fas fa-eye-slash"></i> Inactivate
+                                                        {% else %}
+                                                            <i class="fas fa-eye"></i> Activate
+                                                        {% endif %}
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'holidays:delete' holiday.pk %}" onsubmit="return confirm('Delete this holiday?');">
+                                                    {% csrf_token %}
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                            <div class="text-muted">
+                                Total Count: {{ page_obj.paginator.count }} | {{ per_page }} Records Per Page
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if page_obj.has_previous %}
+                                    <a class="btn btn-sm btn-outline-secondary" href="?page=1"><i class="fas fa-angle-double-left"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.previous_page_number }}"><i class="fas fa-angle-left"></i></a>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-double-left"></i></button>
+                                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-left"></i></button>
+                                {% endif %}
+                                <span class="fw-semibold">{{ page_obj.start_index }}-{{ page_obj.end_index }}</span>
+                                {% if page_obj.has_next %}
+                                    <a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.next_page_number }}"><i class="fas fa-angle-right"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.paginator.num_pages }}"><i class="fas fa-angle-double-right"></i></a>
+                                {% else %}
+                                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-right"></i></button>
+                                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-double-right"></i></button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No holidays scheduled yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow calendar-card-full">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <strong><i class="fas fa-calendar-alt"></i> Calendar</strong>
+                        <span id="holiday-clock" class="text-muted small"></span>
+                    </div>
+                    <div class="btn-group">
+                        <button id="holiday-cal-prev" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Previous month">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button id="holiday-cal-next" class="btn btn-sm btn-outline-secondary" type="button" aria-label="Next month">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                        <div class="text-muted small">Month view</div>
+                        <div class="fw-semibold fs-5" id="holiday-calendar-month"></div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0 text-center align-middle small" id="holiday-calendar">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center">S</th>
+                                    <th class="text-center">M</th>
+                                    <th class="text-center">T</th>
+                                    <th class="text-center">W</th>
+                                    <th class="text-center">T</th>
+                                    <th class="text-center">F</th>
+                                    <th class="text-center">S</th>
+                                </tr>
+                            </thead>
+                            <tbody id="holiday-calendar-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+#holiday-management-page .calendar-card-full {
+    width: 100%;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)),
+        url("{% static 'img/Tajmohol.jpg' %}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none;
+}
+#holiday-management-page .calendar-card-full .card-header,
+#holiday-management-page .calendar-card-full .card-body {
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(1px);
+}
+#holiday-calendar {
+    min-width: 100%;
+    background-color: transparent;
+}
+#holiday-calendar thead th {
+    background-color: transparent !important;
+}
+#holiday-calendar td {
+    width: 46px;
+    height: 42px;
+    padding: 6px 4px;
+    background-color: transparent;
+}
+#holiday-calendar .day-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-weight: 700;
+}
+#holiday-calendar .muted-day {
+    color: #adb5bd !important;
+}
+#holiday-calendar .today {
+    background: #0d6efd;
+    color: #fff;
+}
+#holiday-calendar .sunday-day {
+    background: #fff3cd;
+    color: #8a6d3b;
+    border: 1px solid #ffe49c;
+}
+#holiday-calendar .holiday-day {
+    background: #d1f5d3;
+    color: #0f5132;
+    border: 1px solid #a3e6a7;
+}
+#holiday-calendar th,
+#holiday-calendar td {
+    min-width: 48px;
+    font-weight: 700;
+}
+</style>
+
+{% if calendar_holidays %}
+{{ calendar_holidays|json_script:"holiday-data" }}
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const monthLabel = document.getElementById('holiday-calendar-month');
+    const body = document.getElementById('holiday-calendar-body');
+    const prevBtn = document.getElementById('holiday-cal-prev');
+    const nextBtn = document.getElementById('holiday-cal-next');
+    const clockEl = document.getElementById('holiday-clock');
+
+    if (!monthLabel || !body || !prevBtn || !nextBtn) return;
+
+    const holidayDataEl = document.getElementById('holiday-data');
+    const holidayRanges = holidayDataEl ? JSON.parse(holidayDataEl.textContent || '[]') : [];
+
+    function buildHolidaySet() {
+        const set = new Set();
+        holidayRanges.forEach(range => {
+            if (!range.start || !range.end) return;
+            const [sy, sm, sd] = range.start.split('-').map(Number);
+            const [ey, em, ed] = range.end.split('-').map(Number);
+            let d = new Date(sy, (sm || 1) - 1, sd || 1);
+            const end = new Date(ey, (em || 1) - 1, ed || 1);
+            while (d <= end) {
+                const key = [
+                    d.getFullYear(),
+                    String(d.getMonth() + 1).padStart(2, '0'),
+                    String(d.getDate()).padStart(2, '0'),
+                ].join('-');
+                set.add(key);
+                d.setDate(d.getDate() + 1);
+            }
+        });
+        return set;
+    }
+
+    const holidayDates = buildHolidaySet();
+
+    function startClock() {
+        if (!clockEl) return;
+        const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const pad = (n) => String(n).padStart(2, '0');
+        const tick = () => {
+            const now = new Date();
+            const formatted = `${pad(now.getDate())} ${monthsShort[now.getMonth()]} ${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            clockEl.textContent = formatted;
+        };
+        tick();
+        setInterval(tick, 1000);
+    }
+
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    let current = new Date();
+    current.setDate(1);
+
+    function renderCalendar(dateObj) {
+        const year = dateObj.getFullYear();
+        const month = dateObj.getMonth();
+        const firstDay = new Date(year, month, 1).getDay(); // 0 (Sun) - 6 (Sat)
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+        monthLabel.textContent = `${monthNames[month]} ${year}`;
+        body.innerHTML = '';
+
+        let dayCounter = 1;
+        let nextMonthDay = 1;
+        for (let week = 0; week < 6; week++) {
+            const tr = document.createElement('tr');
+            for (let dow = 0; dow < 7; dow++) {
+                const td = document.createElement('td');
+                const cellIndex = week * 7 + dow;
+                let displayDay;
+                let isCurrentMonth = true;
+
+                if (cellIndex < firstDay) {
+                    displayDay = daysInPrevMonth - (firstDay - 1 - cellIndex);
+                    isCurrentMonth = false;
+                } else if (dayCounter <= daysInMonth) {
+                    displayDay = dayCounter;
+                    dayCounter += 1;
+                } else {
+                    displayDay = nextMonthDay;
+                    nextMonthDay += 1;
+                    isCurrentMonth = false;
+                }
+
+                const span = document.createElement('span');
+                span.textContent = displayDay;
+                span.classList.add('day-pill');
+                const adjMonth = isCurrentMonth ? month : (cellIndex < firstDay ? month - 1 : month + 1);
+                const cellDate = new Date(year, adjMonth, displayDay);
+                const cellDateStr = [
+                    cellDate.getFullYear(),
+                    String(cellDate.getMonth() + 1).padStart(2, '0'),
+                    String(cellDate.getDate()).padStart(2, '0'),
+                ].join('-');
+
+                if (!isCurrentMonth) {
+                    span.classList.add('muted-day');
+                }
+                const today = new Date();
+                if (
+                    isCurrentMonth &&
+                    displayDay === today.getDate() &&
+                    month === today.getMonth() &&
+                    year === today.getFullYear()
+                ) {
+                    span.classList.add('today');
+                }
+                if (isCurrentMonth && cellDate.getDay() === 0) {
+                    span.classList.add('sunday-day');
+                }
+                if (isCurrentMonth && holidayDates.has(cellDateStr)) {
+                    span.classList.add('holiday-day');
+                }
+
+                td.appendChild(span);
+                tr.appendChild(td);
+            }
+            body.appendChild(tr);
+            if (dayCounter > daysInMonth && nextMonthDay > 7) {
+                break;
+            }
+        }
+    }
+
+    function shiftMonth(delta) {
+        current.setMonth(current.getMonth() + delta);
+        current.setDate(1);
+        renderCalendar(current);
+    }
+
+    prevBtn.addEventListener('click', function () { shiftMonth(-1); });
+    nextBtn.addEventListener('click', function () { shiftMonth(1); });
+    renderCalendar(current);
+    startClock();
+});
+</script>
+{% endblock %}

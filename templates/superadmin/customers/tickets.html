@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Customer Ticket Management</h2>
+<p class="text-muted">Super Admin-only: view and manage all customer tickets.</p>
+
+<div class="row g-3 mb-3">
+  {% for card in rule_cards %}
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">{{ card.label }}</div>
+        <div class="h4 mb-0">
+          {{ card.coins }} coins
+          {% if 'create content' in card.label|lower %}/ {{ content_word_block }} words{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Search (Ticket ID / Subject / Email)</label>
+        <input type="text" class="form-control" name="search" value="{{ search }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status">
+          <option value="">All</option>
+          <option value="OPEN" {% if status_filter == 'OPEN' %}selected{% endif %}>Open</option>
+          <option value="IN_PROGRESS" {% if status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+          <option value="RESOLVED" {% if status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+          <option value="CLOSED" {% if status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Priority</label>
+        <select class="form-select" name="priority">
+          <option value="">All</option>
+          <option value="LOW" {% if priority_filter == 'LOW' %}selected{% endif %}>Low</option>
+          <option value="MEDIUM" {% if priority_filter == 'MEDIUM' %}selected{% endif %}>Medium</option>
+          <option value="HIGH" {% if priority_filter == 'HIGH' %}selected{% endif %}>High</option>
+          <option value="CRITICAL" {% if priority_filter == 'CRITICAL' %}selected{% endif %}>Critical</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date from</label>
+        <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date to</label>
+        <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Category</label>
+        <input type="text" class="form-control" name="category" value="{{ category_filter }}">
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button class="btn btn-success" type="submit">Apply</button>
+        <a class="btn btn-outline-secondary" href="{% url 'superadmin:customer_tickets' %}">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>SL No</th>
+          <th>Ticket ID</th>
+          <th>Customer</th>
+          <th>Subject</th>
+          <th>Category</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Created</th>
+          <th>Updated</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if rows %}
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.sl_no }}</td>
+            <td>{{ row.ticket_id }}</td>
+            <td>
+              <div class="fw-semibold">{{ row.customer_name|default:'N/A' }}</div>
+              <div class="text-muted small">{{ row.customer_id|default:'' }}</div>
+            </td>
+            <td>{{ row.subject }}</td>
+            <td>{{ row.category|default:'-' }}</td>
+            <td>{{ row.status }}</td>
+            <td>{{ row.priority }}</td>
+            <td>{{ row.created_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ row.updated_at|date:"Y-m-d H:i" }}</td>
+            <td><a class="btn btn-sm btn-outline-primary" href="{% url 'superadmin:customer_ticket_detail' row.ticket_id %}">View</a></td>
+          </tr>
+          {% endfor %}
+        {% else %}
+        <tr>
+          <td colspan="9" class="text-center text-muted">No tickets found.</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-white">
+    {% if page_obj %}
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="text-muted small"><strong>Total:</strong> {{ page_obj.paginator.count }}</div>
+        <div class="text-muted small"><strong>{{ page_obj.paginator.per_page }}</strong> per page</div>
+        <div class="text-muted small">
+          {% if page_obj.paginator.count %}
+            Showing {{ page_obj.start_index }} - {{ page_obj.end_index }}
+          {% else %}
+            Showing 0 - 0
+          {% endif %}
+        </div>
+        <div class="btn-group">
+          {% if page_obj.has_previous %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page=1">&laquo;</a>
+            <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.previous_page_number }}">&lsaquo;</a>
+          {% else %}
+            <span class="btn btn-sm btn-outline-secondary disabled">&laquo;</span>
+            <span class="btn btn-sm btn-outline-secondary disabled">&lsaquo;</span>
+          {% endif %}
+          <span class="btn btn-sm btn-outline-primary disabled">
+            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+          </span>
+          {% if page_obj.has_next %}
+            <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.next_page_number }}">&rsaquo;</a>
+            <a class="btn btn-sm btn-outline-secondary" href="{{ pagination_base }}page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+          {% else %}
+            <span class="btn btn-sm btn-outline-secondary disabled">&rsaquo;</span>
+            <span class="btn btn-sm btn-outline-secondary disabled">&raquo;</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

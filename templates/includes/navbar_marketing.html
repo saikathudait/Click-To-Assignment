@@ -1,0 +1,333 @@
+{# templates/includes/navbar_marketing.html #}
+{% load menu_tags static %}
+<style>
+    /* Sidebar Styles */
+    .sidebar-marketing {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 260px;
+        background: linear-gradient(180deg, #CAD5E2 0%, rgba(186, 191, 207, 1) 100%); 
+        padding: 20px 0 140px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        scrollbar-width: thin;
+    }
+
+    .sidebar-marketing .brand {
+        padding: 32px 24px 30px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 24px;
+        background: transparent;
+        border-radius: 0;
+    }
+
+    .sidebar-marketing .brand a {
+        color: #0c2f4d;
+        text-decoration: none;
+        font-size: 1.35rem;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        letter-spacing: 0.2px;
+    }
+
+    .sidebar-marketing .brand .logo-mark {
+        width: 100%;
+        max-width: 220px;
+        height: auto;
+        border-radius: 0;
+        background: none;
+        color: #0c2f4d;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: none;
+        font-size: 1.4rem;
+    }
+
+    .sidebar-marketing .brand .logo-text { display: none; }
+
+    .sidebar-marketing .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-marketing .nav-item {
+        margin-bottom: 5px;
+    }
+
+    .sidebar-marketing .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 14px 20px;
+        color: rgba(0, 0, 0, 0.8);
+        text-decoration: none;
+        transition: all 0.3s;
+        position: relative;
+        border-left: 3px solid transparent;
+    }
+
+    .sidebar-marketing .nav-link:hover {
+        background: rgba(255,255,255,0.1);
+        color: #000000ff;
+        border-left-color: #60a5fa;
+        padding-left: 23px;
+    }
+
+    .sidebar-marketing .nav-link.active {
+        background: rgba(0, 174, 255, 0.2);
+        color: #fff;
+        border-left-color: #006cf0ff;
+        font-weight: 600;
+    }
+
+    .sidebar-marketing .nav-link i {
+        width: 24px;
+        margin-right: 12px;
+        font-size: 1.1rem;
+    }
+
+    .sidebar-marketing .user-section {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 260px;
+        border-top: 1px solid rgba(21, 178, 226, 0.1);
+        padding: 15px 20px;
+        background: rgba(10, 186, 230, 0.3);
+        backdrop-filter: blur(10px);
+    }
+
+    .sidebar-marketing .user-dropdown {
+        color: rgba(0, 0, 0, 0.8);
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 5px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .sidebar-marketing .user-dropdown:hover {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+    }
+
+    .sidebar-marketing .user-dropdown i.fa-user {
+        margin-right: 10px;
+    }
+
+    .sidebar-marketing .dropdown-menu {
+        position: relative !important;
+        transform: none !important;
+        margin-top: 10px;
+        width: 100%;
+        background: rgba(30, 58, 138, 0.95);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-marketing .dropdown-menu .dropdown-item {
+        color: rgba(255,255,255,0.8);
+        padding: 10px 15px;
+    }
+
+    .sidebar-marketing .dropdown-menu .dropdown-item:hover {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+    }
+
+    .sidebar-marketing .dropdown-menu .dropdown-divider {
+        border-color: rgba(255,255,255,0.1);
+    }
+
+    .mobile-toggle-marketing {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: #1e3a8a;
+        color: #fff;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width: 768px) {
+        .sidebar-marketing {
+            width: 0;
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+        }
+
+        .sidebar-marketing.show {
+            width: 260px;
+            transform: translateX(0);
+        }
+
+        .sidebar-marketing .user-section {
+            width: 260px;
+        }
+
+        .mobile-toggle-marketing {
+            display: block !important;
+        }
+    }
+
+    .sidebar-marketing::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar-marketing::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.2);
+    }
+
+    .sidebar-marketing::-webkit-scrollbar-thumb {
+        background: rgba(96, 165, 250, 0.5);
+        border-radius: 3px;
+    }
+
+    .sidebar-marketing::-webkit-scrollbar-thumb:hover {
+        background: rgba(96, 165, 250, 0.7);
+    }
+</style>
+
+<!-- Mobile Toggle Button -->
+<button class="mobile-toggle-marketing" onclick="toggleMarketingSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+    <!-- Sidebar -->
+    <div class="sidebar-marketing" id="marketingSidebar">
+        <div class="brand">
+            <a href="{% url 'marketing:dashboard' %}">
+                <span class="logo-mark p-0" style="background:none; box-shadow:none;">
+                    <img src="{% static 'img/logo.png' %}" alt="Logo" style="width: 100%; max-width: 220px; height: auto; object-fit: contain;">
+                </span>
+            </a>
+        </div>
+
+    {% role_menu 'MARKETING' as marketing_menu %}
+    {% if marketing_menu %}
+        <ul class="nav-menu">
+            {% for item in marketing_menu %}
+                {% url item.url_name as item_url %}
+                {% if item_url %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == item_url %}active{% endif %}" href="{{ item_url }}">
+                            <i class="{{ item.icon_class }}"></i>
+                            <span>{{ item.label }}</span>
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% else %}
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'marketing:welcome' %}">
+                    <i class="fas fa-home"></i><span>Welcome</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'marketing:dashboard' %}">
+                    <i class="fas fa-chart-line"></i><span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'marketing:statistics' %}">
+                    <i class="fas fa-chart-pie"></i><span>Statistics</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'marketing:all_projects' %}">
+                    <i class="fas fa-folder-open"></i><span>All Projects</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'marketing:create_job' %}">
+                    <i class="fas fa-plus-circle"></i><span>Create Job</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'tickets:marketing-ticket-list' %}">
+                    <i class="fas fa-ticket-alt"></i><span>My Tickets</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'tickets:marketing-ticket-create' %}">
+                    <i class="fas fa-plus-square"></i><span>Create Ticket</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'holidays:list' %}">
+                    <i class="fas fa-umbrella-beach"></i><span>Holiday Calendar</span>
+                </a>
+            </li>
+        </ul>
+    {% endif %}
+
+    <div class="user-section">
+        <div class="user-dropdown" data-bs-toggle="dropdown">
+            <div>
+                <i class="fas fa-user"></i>
+                <span>{{ user.get_full_name }}</span>
+            </div>
+            <i class="fas fa-chevron-up"></i>
+        </div>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item" href="{% url 'profiles:profile' %}">
+                    <i class="fas fa-id-card"></i> Profile
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item" href="{% url 'accounts:logout' %}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    function toggleMarketingSidebar() {
+        document.getElementById('marketingSidebar').classList.toggle('show');
+    }
+
+    // Set active menu item based on current URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.sidebar-marketing .nav-link');
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('marketingSidebar');
+        const toggle = document.querySelector('.mobile-toggle-marketing');
+        
+        if (window.innerWidth <= 768 && 
+            !sidebar.contains(event.target) && 
+            toggle && !toggle.contains(event.target) &&
+            sidebar.classList.contains('show')) {
+            sidebar.classList.remove('show');
+        }
+    });
+</script>

@@ -1,0 +1,143 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="mb-4">
+  <h2 class="mb-1">Dashboard</h2>
+  <p class="text-muted">Your activity and balances.</p>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card shadow-sm" style="background: {{ theme_color }};">
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-muted">Total Coins</div>
+          <div class="h4 mb-0">{{ coin_balance }}</div>
+        </div>
+        <img src="{% static 'img/Coin.png' %}" alt="Coin" style="width:36px;height:36px;object-fit:cover;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.2);">
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted">Total Operations</div>
+        <div class="h4 mb-0">{{ stats.operations }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted">Coin Spends</div>
+        <div class="h4 mb-0">{{ stats.spend }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">Remove-AI</div>
+        <div class="h5 mb-0">{{ remove_ai_cost|default:0 }} coins</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">Job Checking</div>
+        <div class="h5 mb-0">{{ job_check_cost|default:0 }} coins</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">Structure Generate</div>
+        <div class="h5 mb-0">{{ structure_cost|default:0 }} coins</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-muted small">Create Content</div>
+        <div class="h5 mb-0">{{ content_cost|default:0 }} coins / 250 words</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm" style="background: {{ theme_color }};">
+  <div class="card-body">
+    <h5 class="mb-3">Recent Activity</h5>
+    {% if activities %}
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>SL No</th>
+            <th>Primary ID</th>
+            <th>Task</th>
+            <th>Topic / Detail</th>
+            <th>Coins</th>
+            <th>Status</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in activities %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ item.primary_id|default:item.submission_id|default:'-' }}</td>
+            <td>{{ item.type }}</td>
+            <td>{{ item.topic|default:'-' }}</td>
+            <td>{{ item.coins }}</td>
+            <td>{{ item.status }}</td>
+            <td>{% if item.created_at %}{{ item.created_at|date:"Y-m-d H:i" }}{% else %}-{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="pt-3">
+      {% if activity_page_obj %}
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="text-muted small">
+          {% if activity_page_obj.paginator.count %}
+            Showing {{ activity_page_obj.start_index }} - {{ activity_page_obj.end_index }} of {{ activity_page_obj.paginator.count }}
+          {% else %}
+            Showing 0 - 0
+          {% endif %}
+          · Total rows: {{ activity_total_rows }}
+        </div>
+        <div class="btn-group">
+          {% if activity_page_obj.has_previous %}
+            <a class="btn btn-sm btn-outline-secondary" href="?page=1">&laquo;</a>
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ activity_page_obj.previous_page_number }}">&lsaquo;</a>
+          {% else %}
+            <span class="btn btn-sm btn-outline-secondary disabled">&laquo;</span>
+            <span class="btn btn-sm btn-outline-secondary disabled">&lsaquo;</span>
+          {% endif %}
+          <span class="btn btn-sm btn-outline-primary disabled">
+            {{ activity_page_obj.number }} / {{ activity_page_obj.paginator.num_pages }}
+          </span>
+          {% if activity_page_obj.has_next %}
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ activity_page_obj.next_page_number }}">&rsaquo;</a>
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ activity_page_obj.paginator.num_pages }}">&raquo;</a>
+          {% else %}
+            <span class="btn btn-sm btn-outline-secondary disabled">&rsaquo;</span>
+            <span class="btn btn-sm btn-outline-secondary disabled">&raquo;</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+      <div class="text-muted">No activity yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

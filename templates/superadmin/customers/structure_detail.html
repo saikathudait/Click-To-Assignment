@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Structure Generation Submission</h2>
+<p class="text-muted">Full inputs and AI-generated structure.</p>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body d-flex justify-content-between align-items-start">
+    <div>
+      <div class="fw-semibold">Submission ID: {{ submission.submission_id }}</div>
+      <div class="text-muted small">Created: {{ submission.created_at|date:"Y-m-d H:i" }}</div>
+      <div class="text-muted small">Status: {{ submission.status }}</div>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'superadmin:customer_structures' %}">Back</a>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Customer</h5>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="fw-semibold">Name</div>
+        <div class="text-muted">{{ submission.customer_name|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Customer ID</div>
+        <div class="text-muted">{{ submission.customer_id|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Email</div>
+        <div class="text-muted">{{ submission.user.email|default:'' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Coins Spent</div>
+        <div class="text-muted">{{ submission.coins_spent }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Input Details</h5>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="fw-semibold">Topic</div>
+        <div class="text-muted">{{ submission.topic|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Word Count</div>
+        <div class="text-muted">{{ submission.word_count }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Referencing Style</div>
+        <div class="text-muted">{{ submission.referencing_style|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Academic Style</div>
+        <div class="text-muted">{{ submission.academic_style|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Academic Level</div>
+        <div class="text-muted">{{ submission.academic_level|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Subject Field</div>
+        <div class="text-muted">{{ submission.subject_field|default:'N/A' }}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="fw-semibold">Job Reference</div>
+        <div class="text-muted">{{ submission.job_reference|default:'N/A' }}</div>
+      </div>
+      <div class="col-12">
+        <div class="fw-semibold">Summary / Instructions</div>
+        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.summary|default:"N/A" }}</pre>
+      </div>
+      <div class="col-12">
+        <div class="fw-semibold">Marking Criteria</div>
+        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.marking_criteria|default:"N/A" }}</pre>
+      </div>
+      <div class="col-12">
+        <div class="fw-semibold">Merit Criteria</div>
+        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.merit_criteria|default:"N/A" }}</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">AI Prompt (debug)</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.ai_prompt|default:"N/A" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">AI-Generated Structure</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.ai_structure|default:"N/A" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Error (if any)</h5>
+    <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ submission.error_message|default:"None" }}</pre>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="mb-3">Meta</h5>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="fw-semibold">Status</div>
+        <div class="text-muted">{{ submission.status }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Created</div>
+        <div class="text-muted">{{ submission.created_at|date:"Y-m-d H:i" }}</div>
+      </div>
+      <div class="col-md-4">
+        <div class="fw-semibold">Updated</div>
+        <div class="text-muted">{{ submission.updated_at|date:"Y-m-d H:i" }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

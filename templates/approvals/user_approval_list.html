@@ -1,0 +1,205 @@
+<!-- templates/approvals/user_approval_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}User Approval - SuperAdmin{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-user-check"></i> User Approval</h1>
+
+<!-- Statistics Cards -->
+<div class="d-flex flex-nowrap gap-2 mb-4 overflow-auto py-1">
+    <div class="flex-shrink-0 stat-card">
+        <div class="card card-stat shadow" data-filter="all">
+            <div class="card-body text-center py-2 px-2">
+                <h4 class="text-info mb-1" style="font-size: 1.1rem;">{{ total_requests }}</h4>
+                <p class="mb-0 small">Total Requests</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="flex-shrink-0 stat-card">
+        <div class="card card-stat shadow" data-filter="approved">
+            <div class="card-body text-center py-2 px-2">
+                <h4 class="text-success mb-1" style="font-size: 1.1rem;">{{ total_approved }}</h4>
+                <p class="mb-0 small">Total Approved</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="flex-shrink-0 stat-card">
+        <div class="card card-stat shadow" data-filter="rejected">
+            <div class="card-body text-center py-2 px-2">
+                <h4 class="text-danger mb-1" style="font-size: 1.1rem;">{{ total_rejected }}</h4>
+                <p class="mb-0 small">Total Rejected</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="flex-shrink-0 stat-card">
+        <div class="card card-stat shadow" data-filter="pending">
+            <div class="card-body text-center py-2 px-2">
+                <h4 class="text-warning mb-1" style="font-size: 1.1rem;">{{ pending_action }}</h4>
+                <p class="mb-0 small">Pending Action</p>
+            </div>
+        </div>
+    </div>
+    <div class="flex-shrink-0 stat-card">
+        <a href="?filter=superadmin" class="text-decoration-none">
+            <div class="card card-stat shadow">
+                <div class="card-body text-center py-2 px-2">
+                    <h4 class="text-primary mb-1" style="font-size: 1.1rem;">{{ total_superadmins }}</h4>
+                    <p class="mb-0 small">Super Admin</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="flex-shrink-0 stat-card">
+        <a href="?filter=marketing" class="text-decoration-none">
+            <div class="card card-stat shadow">
+                <div class="card-body text-center py-2 px-2">
+                    <h4 class="text-success mb-1" style="font-size: 1.1rem;">{{ total_marketing }}</h4>
+                    <p class="mb-0 small">Marketing Team</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="flex-shrink-0 stat-card">
+        <a href="?filter=customer" class="text-decoration-none">
+            <div class="card card-stat shadow">
+                <div class="card-body text-center py-2 px-2">
+                    <h4 class="text-info mb-1" style="font-size: 1.1rem;">{{ total_customers }}</h4>
+                    <p class="mb-0 small">Total Customer</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Add Employee Form -->
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="fas fa-user-plus"></i> Add New Employee</h5>
+            <button class="btn btn-primary" type="button" onclick="document.getElementById('addEmployeeForm').scrollIntoView({behavior: 'smooth'});">
+                Add New Employee
+            </button>
+        </div>
+        <div id="addEmployeeForm">
+            <form class="row g-3" method="post" action="{% url 'approvals:create_employee' %}">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <label class="form-label">Email ID</label>
+                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" name="role" required>
+                        {% for value,label in role_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Password</label>
+                    <div class="input-group">
+                        <input type="text" name="password" id="newEmployeePassword" class="form-control" placeholder="Leave blank to auto-generate">
+                        <button class="btn btn-outline-secondary" type="button" onclick="generateEmployeePassword()">Generate</button>
+                    </div>
+                    <div class="form-text">Leave blank to auto-generate a strong password.</div>
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-success" type="submit">Create Employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>SL No</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Email</th>
+                        <th>WhatsApp No</th>
+                        <th>Last Qualification</th>
+                        <th>Role</th>
+                        <th>Action</th>
+                        <th>View</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ user.first_name }}</td>
+                        <td>{{ user.last_name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.whatsapp_country_code }} {{ user.whatsapp_no }}</td>
+                        <td>{{ user.last_qualification }}</td>
+                        <td>{{ user.get_role_display }}</td>
+                        <td>
+                            {% if user.is_approved %}
+                                <span class="badge bg-success">Approved</span>
+                                <small class="d-block">ID: {{ user.employee_id }}</small>
+                            {% elif not user.is_active %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% else %}
+                                <form method="post" action="{% url 'approvals:approve_user' user.id %}" class="d-flex flex-column gap-2">
+                                    {% csrf_token %}
+                                    <select name="role" class="form-select form-select-sm" required>
+                                        {% for value,label in role_choices %}
+                                            <option value="{{ value }}" {% if value == user.role %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn btn-sm btn-success" onclick="return confirm('Approve this user with the selected role?')">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                </form>
+                                <a href="{% url 'approvals:reject_user' user.id %}" 
+                                   class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Reject this user?')">
+                                    <i class="fas fa-times"></i> Reject
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'approvals:user_detail' user.id %}">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">No users found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% include 'includes/pagination.html' with page_obj=page_obj pagination_base=pagination_base page_param='page' %}
+<script>
+function generateEmployeePassword() {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@$!%*?&';
+    let pwd = '';
+    for (let i = 0; i < 12; i++) {
+        pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const field = document.getElementById('newEmployeePassword');
+    if (field) {
+        field.value = pwd;
+    }
+}
+</script>
+<style>
+.stat-card { min-width: 120px; }
+.stat-card .card { border-radius: 10px; }
+</style>
+{% endblock %}

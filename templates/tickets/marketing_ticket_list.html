@@ -1,0 +1,98 @@
+<!-- templates/marketing/dashboard.html -->
+{% extends 'base.html' %}
+
+<style>
+
+</style>
+
+<div style="margin-left: 260px; padding: 30px; width: calc(100% - 260px);">
+{% block title %}Dashboard - Marketing{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h3 class="mb-3">My Tickets</h3>
+
+    {% if tickets %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Ticket ID</th>
+                        <th>Job ID</th>
+                        <th>Title</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Deadline</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ ticket.ticket_id }}</td>
+                            <td>{{ ticket.job_id }}</td>
+                            <td>{{ ticket.title }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if ticket.priority == 'URGENT' %} bg-danger
+                                    {% elif ticket.priority == 'HIGH' %} bg-warning text-dark
+                                    {% elif ticket.priority == 'MEDIUM' %} bg-primary
+                                    {% else %} bg-secondary {% endif %}">
+                                    {{ ticket.get_priority_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark">
+                                    {{ ticket.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if ticket.deadline %}
+                                    {{ ticket.deadline|date:"d M Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ ticket.created_at|date:"d M Y H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
+            <div class="text-muted">
+                Total Count: {{ page_obj.paginator.count }} | {{ page_obj.paginator.per_page }} Records Per Page
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                {% if page_obj.has_previous %}
+                    <a class="btn btn-sm btn-outline-secondary" href="?page=1"><i class="fas fa-angle-double-left"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.previous_page_number }}"><i class="fas fa-angle-left"></i></a>
+                {% else %}
+                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-double-left"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-left"></i></button>
+                {% endif %}
+                <span class="fw-semibold">{{ page_obj.start_index }}-{{ page_obj.end_index }}</span>
+                {% if page_obj.has_next %}
+                    <a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.next_page_number }}"><i class="fas fa-angle-right"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.paginator.num_pages }}"><i class="fas fa-angle-double-right"></i></a>
+                {% else %}
+                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-right"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-double-right"></i></button>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No tickets created yet. Click <strong>“+ New Ticket”</strong> to create one.
+        </div>
+    {% endif %}
+</div>
+
+
+{% endblock %}
+
+
+

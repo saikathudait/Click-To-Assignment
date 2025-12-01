@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{# templates/superadmin/dashboard.html #}
+
+{% block title %}Dashboard - SuperAdmin{% endblock %}
+{% block content %}
+
+
+<h1 class="mb-4"><i class="fas fa-tachometer-alt"></i> SuperAdmin Dashboard</h1>
+
+
+<!-- Quick Stats Row -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ total_jobs }}</h3>
+                <p class="mb-0">Total Jobs</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ pending_jobs }}</h3>
+                <p class="mb-0">Pending Jobs</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-info">{{ total_users }}</h3>
+                <p class="mb-0">Total Users</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-success">₹{{ total_amount|floatformat:2 }}</h3>
+                <p class="mb-0">Total Amount</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Actions -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card shadow border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Pending Actions</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        New User Approvals
+                        <a href="{% url 'approvals:user_approval_list' %}" class="badge bg-warning text-dark">
+                            {{ pending_users }}
+                        </a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Profile Update Requests
+                        <a href="{% url 'approvals:profile_update_list' %}" class="badge bg-info">
+                            {{ pending_profile_updates }}
+                        </a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        New Jobs to Process
+                        <a href="{% url 'superadmin:new_jobs' %}" class="badge bg-danger">
+                            {{ pending_jobs }}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Recent Jobs</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Job ID</th>
+                                <th>System ID</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in recent_jobs %}
+                            <tr>
+                                <td>{{ job.job_id }}</td>
+                                <td>{{ job.system_id }}</td>
+                                <td>₹{{ job.amount }}</td>
+                                <td>
+                                    <span class="badge bg-{{ job.status|lower }}">
+                                        {{ job.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ job.created_at|date:"M d, H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No recent jobs</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                    <div class="text-muted">
+                        Total Count: {{ recent_page_obj.paginator.count }} | {{ recent_per_page }} Records Per Page
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if recent_page_obj.has_previous %}
+                            <a class="btn btn-sm btn-outline-secondary" href="?{% if recent_query %}{{ recent_query }}&{% endif %}recent_page=1"><i class="fas fa-angle-double-left"></i></a>
+                            <a class="btn btn-sm btn-outline-secondary" href="?{% if recent_query %}{{ recent_query }}&{% endif %}recent_page={{ recent_page_obj.previous_page_number }}"><i class="fas fa-angle-left"></i></a>
+                        {% else %}
+                            <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-double-left"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-left"></i></button>
+                        {% endif %}
+                        {% if recent_page_obj.paginator.count %}
+                            <span class="fw-semibold">{{ recent_page_obj.start_index }}-{{ recent_page_obj.end_index }}</span>
+                        {% else %}
+                            <span class="fw-semibold">0-0</span>
+                        {% endif %}
+                        {% if recent_page_obj.has_next %}
+                            <a class="btn btn-sm btn-outline-secondary" href="?{% if recent_query %}{{ recent_query }}&{% endif %}recent_page={{ recent_page_obj.next_page_number }}"><i class="fas fa-angle-right"></i></a>
+                            <a class="btn btn-sm btn-outline-secondary" href="?{% if recent_query %}{{ recent_query }}&{% endif %}recent_page={{ recent_page_obj.paginator.num_pages }}"><i class="fas fa-angle-double-right"></i></a>
+                        {% else %}
+                            <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-right"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-angle-double-right"></i></button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-link"></i> Quick Links</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'superadmin:all_jobs' %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-briefcase"></i> All Jobs
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'superadmin:new_jobs' %}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-bell"></i> New Jobs
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'approvals:user_approval_list' %}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-user-check"></i> User Approvals
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'approvals:profile_update_list' %}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-edit"></i> Profile Updates
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+

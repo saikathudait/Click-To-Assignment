@@ -1,0 +1,102 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<h2 class="mb-3">Job Checking</h2>
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Wallet Balance</div>
+        <div class="h4 mb-0">{{ wallet_balance }} coins</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Job Checking Cost</div>
+        <div class="h4 mb-0">{{ job_check_cost }} coins</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card shadow-sm" style="background: {{ theme_color }};">
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Instruction</label>
+        <textarea class="form-control" name="instruction" rows="4" placeholder="Describe the job"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Attachment</label>
+        <input type="file" class="form-control" name="attachment">
+      </div>
+      <button class="btn btn-primary" type="submit">Generate Summary</button>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm mt-3">
+  <div class="card-body table-responsive">
+    <h5 class="mb-3">Recent Job Checking</h5>
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>SL No</th>
+          <th>Submission ID</th>
+          <th>Status</th>
+          <th>Coins</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if recent_checks %}
+          {% for row in recent_checks %}
+          <tr>
+            <td>{{ forloop.counter|add:recent_checks_page_obj.start_index|add:-1 }}</td>
+            <td>{{ row.submission_id }}</td>
+            <td>{{ row.status }}</td>
+            <td>{{ row.coins_spent }}</td>
+            <td>{{ row.created_at|date:"Y-m-d H:i" }}</td>
+            <td><a class="btn btn-sm btn-outline-primary" href="{% url 'customer:job_check_detail' row.submission_id %}">View</a></td>
+          </tr>
+          {% endfor %}
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted">No job checking submissions yet.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+    {% if recent_checks_page_obj %}
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+      <div class="text-muted small">
+        {% if recent_checks_page_obj.paginator.count %}
+          Showing {{ recent_checks_page_obj.start_index }} - {{ recent_checks_page_obj.end_index }} of {{ recent_checks_page_obj.paginator.count }}
+        {% else %}
+          Showing 0 - 0
+        {% endif %}
+      </div>
+      <div class="btn-group">
+        {% if recent_checks_page_obj.has_previous %}
+          <a class="btn btn-sm btn-outline-secondary" href="?rc_page=1">&laquo;</a>
+          <a class="btn btn-sm btn-outline-secondary" href="?rc_page={{ recent_checks_page_obj.previous_page_number }}">&lsaquo;</a>
+        {% else %}
+          <span class="btn btn-sm btn-outline-secondary disabled">&laquo;</span>
+          <span class="btn btn-sm btn-outline-secondary disabled">&lsaquo;</span>
+        {% endif %}
+        <span class="btn btn-sm btn-outline-primary disabled">
+          {{ recent_checks_page_obj.number }} / {{ recent_checks_page_obj.paginator.num_pages }}
+        </span>
+        {% if recent_checks_page_obj.has_next %}
+          <a class="btn btn-sm btn-outline-secondary" href="?rc_page={{ recent_checks_page_obj.next_page_number }}">&rsaquo;</a>
+          <a class="btn btn-sm btn-outline-secondary" href="?rc_page={{ recent_checks_page_obj.paginator.num_pages }}">&raquo;</a>
+        {% else %}
+          <span class="btn btn-sm btn-outline-secondary disabled">&rsaquo;</span>
+          <span class="btn btn-sm btn-outline-secondary disabled">&raquo;</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

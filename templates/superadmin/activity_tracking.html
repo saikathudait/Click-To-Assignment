@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-stream me-2"></i>Activity Tracking</h2>
+            <p class="text-muted mb-0">Review every critical change across jobs, forms, holidays, menus, and user actions.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    {% for card in card_stats %}
+    <div class="col-md-3">
+        <a href="{{ card.url }}" class="text-decoration-none">
+            <div class="card shadow-sm card-stat {% if card.active %}border-success{% endif %}">
+                <div class="card-body">
+                    <div class="text-muted small">{{ card.label }}</div>
+                    <div class="h3 mb-0">{{ card.count }}</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Filters</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row gy-3 gx-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" value="{{ filters.search }}" class="form-control" placeholder="Description, target, etc.">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">User</label>
+                <input type="text" name="user" value="{{ filters.user_query }}" class="form-control" placeholder="Name or email">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-select">
+                    <option value="">All roles</option>
+                    {% for code,label in role_choices %}
+                        <option value="{{ code }}" {% if filters.role == code %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Action Type</label>
+                <select name="action_type" class="form-select">
+                    <option value="">All actions</option>
+                    {% for code,label in action_choices %}
+                        <option value="{{ code }}" {% if filters.action_type == code %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Target Type</label>
+                <select name="target_type" class="form-select">
+                    <option value="">All targets</option>
+                    {% for option in target_choices %}
+                        <option value="{{ option.value }}" {% if filters.target_type == option.value %}selected{% endif %}>
+                            {{ option.label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Target ID</label>
+                <input type="text" name="target_id" value="{{ filters.target_id }}" class="form-control" placeholder="e.g. Job #">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">From Date</label>
+                <input type="date" name="date_from" value="{{ filters.date_from }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To Date</label>
+                <input type="date" name="date_to" value="{{ filters.date_to }}" class="form-control">
+            </div>
+            <div class="col-md-12 d-flex gap-2 justify-content-end">
+                <a href="{% url 'superadmin:activity_tracking' %}" class="btn btn-outline-secondary">Reset</a>
+                <button type="submit" class="btn btn-success">Apply</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+        <span>Total Filtered: {{ total_filtered }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Actor</th>
+                    <th>Role</th>
+                    <th>Action</th>
+                    <th>Target</th>
+                    <th>Description</th>
+                    <th>IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if logs %}
+                    {% for entry in logs %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">{{ entry.timestamp_str }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ entry.actor }}</div>
+                                <div class="text-muted small">{{ entry.instance.user_email }}</div>
+                            </td>
+                            <td>{{ entry.role_label }}</td>
+                            <td>
+                                <span class="badge bg-secondary">{{ entry.action_label }}</span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ entry.target_label }}</div>
+                                <div class="text-muted small">{{ entry.target_id }}</div>
+                            </td>
+                            <td style="max-width: 320px;">
+                                <div class="text-truncate">{{ entry.description }}</div>
+                                {% if entry.user_agent %}
+                                    <div class="text-muted small">UA: {{ entry.user_agent }}</div>
+                                {% endif %}
+                            </td>
+                            <td>{{ entry.ip_address }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No activity matches your filters.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center">
+        <div>Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total_filtered }} | {{ per_page }} Records Per Page</div>
+        <div class="d-flex align-items-center gap-2">
+            <a class="btn btn-outline-secondary btn-sm {% if not page_obj.has_previous %}disabled{% endif %}"
+               href="{% if page_obj.has_previous %}{{ pagination_base }}page={{ page_obj.previous_page_number }}{% else %}#{% endif %}">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            <a class="btn btn-outline-secondary btn-sm {% if not page_obj.has_next %}disabled{% endif %}"
+               href="{% if page_obj.has_next %}{{ pagination_base }}page={{ page_obj.next_page_number }}{% else %}#{% endif %}">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
